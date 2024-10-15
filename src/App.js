@@ -3,6 +3,9 @@ import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
+import Detailpage from './Components/Detailpage';
+import RegistrationForm from './Components/Register';
+import JoinEvent from './Front-end/JoinEventpage';
 
 
 const theme = createTheme();
@@ -39,6 +42,15 @@ function App() {
               path="/home" 
               element={isAuthenticated ? <HomePage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/event-detail" 
+              element={<Detailpage />} /> 
+            <Route 
+              path="/event-register" 
+              element={<RegistrationForm />} /> 
+            <Route 
+              path="/activity-attend" 
+              element={<JoinEvent />} /> 
             <Route 
               path="*" 
               element={<Navigate to="/login" />} 
