@@ -3,6 +3,7 @@ import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
+import Myactivity from './Front-end/Myactivity';
 
 
 const theme = createTheme();
@@ -38,6 +39,10 @@ function App() {
             <Route 
               path="/home" 
               element={isAuthenticated ? <HomePage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+            path="/activity-owner" 
+            element={<Myactivity />} 
             />
             <Route 
               path="*" 
