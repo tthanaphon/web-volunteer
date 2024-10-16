@@ -10,7 +10,7 @@ import Sidebar from '../Front-end/Sidebar';
 const GENDER_CHOICES = ['ชาย', 'หญิง', 'อื่นๆ'];
 const RELIGION_CHOICES = ['พุทธ', 'คริสต์', 'อิสลาม', 'ฮินดู', 'ซิกข์', 'ไม่มีศาสนา', 'อื่นๆ'];
 
-const RegistrationForm = () => {
+const RegistrationForm = ({ userId  } ) => {
   const location = useLocation();
   const { eventID, event_name } = location.state || {};
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ const RegistrationForm = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const navigate = useNavigate();
-  
+  console.log('userid', userId )
 //  console.log('id',eventID)
 //  console.log('name',event_name)
  
@@ -70,7 +70,7 @@ const RegistrationForm = () => {
         etc: formData.etc,
         status: 'active', // Set status to active
         event: eventID, // Use the received eventId
-        user: 3 // Replace with actual user ID or remove if not needed
+        user: userId // Replace with actual user ID or remove if not needed
     };
     console.log('data:', dataToSubmit)
 
