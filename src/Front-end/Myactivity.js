@@ -8,10 +8,8 @@ import AddIcon from '@mui/icons-material/Add';
 const Myactivity = () => {
   const [requests, setRequests] = useState([]);  // เก็บข้อมูลคำร้องทั้งหมด
   const [selectedEvent, setSelectedEvent] = useState(null); 
-  const users = [
-    { user_id: 1, name: 'John Doe', tel: '0812345678' },
-    { user_id: 2, name: 'Jane Smith', tel: '0897654321' },
-  ];
+  const [userId, setUserId] = useState(null);
+  const [UserData, setUserData] = useState(null); // สร้าง state สำหรับเก็บข้อมูลผู้ใช้
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     event_name: '',
@@ -120,7 +118,9 @@ const Myactivity = () => {
   ];
 
   const handleOpenForm = () => {
-    setFormData({
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      user: userId || '', // Set the user ID here if it exists
       event_name: '',
       type: '',
       address: '',
@@ -131,16 +131,39 @@ const Myactivity = () => {
       enddate: '',
       timestart: '',
       date_create: new Date().toISOString().slice(0, 16),
-      user: '',
-    });
+    }));
     setEventImg(null);
-    setOpen(true); // เปิดฟอร์ม
+    setOpen(true);
   };
 
   const handleCloseForm = () => setOpen(false); // ปิดฟอร์ม
 
   const handleFileChange = (e) => setEventImg(e.target.files[0]);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userID');
+    if (storedUserId) {
+      setUserId(storedUserId);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        user: storedUserId, // อัปเดตค่า user ใน formData
+      }));
+      // Fetch ข้อมูลผู้ใช้จาก API โดยใช้ storedUserId
+      fetch(`http://127.0.0.1:8000/api/users/${storedUserId}/`)
+        .then((response) => response.json())
+        .then((data) => {
+          // สมมุติว่าข้อมูลที่ดึงมาเป็น { name: 'John Doe', tel: '0123456789' }
+          setUserData({ name: data.name, tel: data.tel });
+          console.log('User data fetched:', data);
+        })
+        .catch((error) => console.error('Error fetching user data:', error));
+    } else {
+      console.log('No userId found in localStorage');
+    }
+  }, []);
   
+
+
   const [openDetails, setOpenDetails] = useState(false); 
   const handleOpenDetails = (id) => {
     // ดึงข้อมูลกิจกรรมจาก API ตาม eventId
@@ -163,17 +186,27 @@ const Myactivity = () => {
     if (confirmDelete) {
       fetch(`http://127.0.0.1:8000/api/events/${id}/`, { method: 'DELETE' })
         .then((response) => {
+          if (response.ok) {
+            window.location.reload(); // Reload the page after successful deletion
+          } else {
+            console.error('Failed to delete event');
+          }
         })
         .catch((error) => console.error('Error deleting event:', error));
     } 
   };
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: name === 'timestart' ? `${value}:00` : value });
+    setFormData({ 
+      ...formData, 
+      [name]: name === 'timestart' ? `${value}:00` : value 
+    });
   };
-
+  
   const handleSubmit = () => {
-    const isFormValid = Object.values(formData).every(field => field !== '');
+    console.log('User ID in formData:', formData.user);
+    const isFormValid = Object.values(formData).every((field) => field !== '');
     if (!isFormValid) {
       alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       return;
@@ -181,7 +214,7 @@ const Myactivity = () => {
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     if (eventImg) data.append('event_img', eventImg);
-
+  
     fetch('http://127.0.0.1:8000/api/events/', { method: 'POST', body: data })
       .then((response) => response.json().then((data) => ({ status: response.status, data })))
       .then(({ status, data }) => {
@@ -191,19 +224,43 @@ const Myactivity = () => {
       })
       .catch((error) => console.error('Error creating event:', error));
   };
+  
 
-  useEffect(() => {
+useEffect(() => {
+  if (userId) {
+    console.log('Current userId:', userId); // แสดง userId ใน console
+    
+    // เรียก API เพื่อดึงข้อมูลคำร้อง
     fetch('http://127.0.0.1:8000/api/requests/')
       .then((response) => response.json())
-      .then((data) => setRequests(data))
-      .catch((error) => console.error('Error fetching requests:', error));
-  }, []);
+      .then((data) => {
+        // ตรวจสอบว่า `event.user` มีค่าตรงกับ `userId` ที่ได้มา
+        const filteredRequests = data.filter(
+          (request) => request.event.user === parseInt(userId)
+        );
 
+        // ถ้าค่าตรงกัน จึงตั้งค่าข้อมูลคำร้องที่กรองแล้ว
+        if (filteredRequests.length > 0) {
+          console.log('Filtered requests:', filteredRequests); // ตรวจสอบข้อมูลที่กรองแล้ว
+          setRequests(filteredRequests);
+        } else {
+          console.log('No matching requests for the current user.');
+        }
+      })
+      .catch((error) => console.error('Error fetching requests:', error));
+  } else {
+    console.log('User ID is not available.');
+  }
+}, [userId]);
+
+  
+  
+  
   const renderTable = (title, status) => {
     const filteredRequests = requests.filter((request) => request.status === status);
-
+  
     if (filteredRequests.length === 0) return null;
-
+  
     return (
       <Box p={3}>
         <Typography variant="h6" mt={3}>{title}</Typography>
@@ -226,9 +283,15 @@ const Myactivity = () => {
                   <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
                   <TableCell>{request.event.amount}</TableCell>
                   <TableCell>
-                    <Description style={{ cursor: 'pointer' }} onClick={() => handleOpenDetails(request.event.event_id)} />
+                    <Description 
+                      style={{ cursor: 'pointer' }} 
+                      onClick={() => handleOpenDetails(request.event.event_id)} 
+                    />
                     <Edit style={{ cursor: 'pointer' }} />
-                    <Delete style={{ cursor: 'pointer' }} onClick={() => deleteEventById(request.event.event_id)} />
+                    <Delete 
+                      style={{ cursor: 'pointer' }} 
+                      onClick={() => deleteEventById(request.event.event_id)} 
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -238,6 +301,7 @@ const Myactivity = () => {
       </Box>
     );
   };
+  
 
   return (
     <Box sx={{ display: 'flex', padding: 2 }}>
@@ -418,25 +482,17 @@ const Myactivity = () => {
               }}
             />
           </Grid>
-            {/* รายชื่อผู้จัดกิจกรรม */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>ผู้จัดกิจกรรม</InputLabel>
-                <Select
-                  label="ผู้จัดกิจกรรม"
-                  name="user"
-                  value={formData.user}
-                  onChange={handleChange} // เมื่อเลือกผู้ใช้ จะอัปเดตค่า user_id ใน formData
-                >
-                  {users.map((user) => (
-                    <MenuItem key={user.user_id} value={user.user_id}>
-                      {user.name} ({user.tel}) {/* แสดงชื่อและเบอร์โทรของผู้ใช้ */}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
+          {/* รายชื่อผู้จัดกิจกรรม */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="ผู้จัดกิจกรรม"
+              fullWidth
+              value={UserData ? `${UserData.name} (${UserData.tel})` : ''} // ตรวจสอบว่า UserData มีค่าหรือไม่ก่อนแสดง
+              InputProps={{
+                readOnly: true, // ทำให้ไม่สามารถแก้ไขข้อมูลใน TextField ได้
+              }}
+            />
+          </Grid>
                   {/* อัปโหลดไฟล์รูปภาพ */}
                   <Grid item xs={12} md={6}>
                     <input
@@ -504,4 +560,3 @@ const Myactivity = () => {
 };
 
 export default Myactivity;
-
