@@ -7,6 +7,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 const Myactivity = () => {
   const [requests, setRequests] = useState([]);  // เก็บข้อมูลคำร้องทั้งหมด
+  const [selectedEvent, setSelectedEvent] = useState(null); 
   const users = [
     { user_id: 1, name: 'John Doe', tel: '0812345678' },
     { user_id: 2, name: 'Jane Smith', tel: '0897654321' },
@@ -139,6 +140,22 @@ const Myactivity = () => {
   const handleCloseForm = () => setOpen(false); // ปิดฟอร์ม
 
   const handleFileChange = (e) => setEventImg(e.target.files[0]);
+  
+  const [openDetails, setOpenDetails] = useState(false); 
+  const handleOpenDetails = (id) => {
+    // ดึงข้อมูลกิจกรรมจาก API ตาม eventId
+    fetch(`http://127.0.0.1:8000/api/events/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        setSelectedEvent(data);  // เก็บข้อมูลกิจกรรมที่ดึงมาใน state
+        setOpenDetails(true);    // เปิดโมดาลแสดงรายละเอียด
+      })
+      .catch((error) => console.error('Error fetching event details:', error));
+  };
+  const handleCloseDetails = () => {
+    setOpenDetails(false); // ปิดโมดาล
+    setSelectedEvent(null); // ล้างข้อมูลกิจกรรมเมื่อปิดโมดาล
+  };
 
   const deleteEventById = (id) => {
     const confirmDelete = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรม?`);
@@ -150,7 +167,6 @@ const Myactivity = () => {
         .catch((error) => console.error('Error deleting event:', error));
     } 
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: name === 'timestart' ? `${value}:00` : value });
@@ -210,7 +226,7 @@ const Myactivity = () => {
                   <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
                   <TableCell>{request.event.amount}</TableCell>
                   <TableCell>
-                    <Description style={{ cursor: 'pointer' }} />
+                    <Description style={{ cursor: 'pointer' }} onClick={() => handleOpenDetails(request.event.event_id)} />
                     <Edit style={{ cursor: 'pointer' }} />
                     <Delete style={{ cursor: 'pointer' }} onClick={() => deleteEventById(request.event.event_id)} />
                   </TableCell>
@@ -438,6 +454,44 @@ const Myactivity = () => {
         </Box>
       </DialogContent>
     </Dialog>
+    {/* The Dialog for showing details* */}
+    <Dialog open={openDetails} onClose={handleCloseDetails} maxWidth="md" fullWidth>
+  <DialogTitle>
+    รายละเอียดกิจกรรม
+    <IconButton
+      aria-label="close"
+      onClick={handleCloseDetails}
+      sx={{
+        position: 'absolute',
+        right: 8,
+        top: 8,
+        color: (theme) => theme.palette.grey[500],
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+  </DialogTitle>
+  <DialogContent>
+    {selectedEvent && (
+      <Box>
+        <Typography variant="h6">{selectedEvent.event_name}</Typography>
+        <Typography variant="body1">หมวดหมู่: {selectedEvent.type}</Typography>
+        <Typography variant="body1">สถานที่: {selectedEvent.address}, {selectedEvent.province}</Typography>
+        <Typography variant="body1">รายละเอียด: {selectedEvent.detail}</Typography>
+        <Typography variant="body1">จำนวนคนลงทะเบียน: {selectedEvent.amount}</Typography>
+        <Typography variant="body1">วันที่จัด: {selectedEvent.startdate} - {selectedEvent.enddate}</Typography>
+        <Typography variant="body1">เวลาจัด: {selectedEvent.timestart}</Typography>
+        {selectedEvent.event_img && (
+          <img
+            src={URL.createObjectURL(selectedEvent.event_img)}
+            alt="Event"
+            style={{ width: '100%', height: 'auto', marginBottom: '20px' }}
+          />
+        )}
+      </Box>
+    )}
+  </DialogContent>
+</Dialog>
 
           {/* Tables for Approved, Pending, and Rejected Activities */}
           {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
