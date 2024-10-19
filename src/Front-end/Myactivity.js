@@ -1,8 +1,9 @@
-import { MenuItem, Select, InputLabel, FormControl, TextField, Box, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import {  MenuItem, Select, InputLabel, FormControl, TextField, Box, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Description, Edit, Delete } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import Sidebar from './Sidebar';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -12,10 +13,12 @@ const Myactivity = () => {
   const [userId, setUserId] = useState(null);
   const [UserData, setUserData] = useState(null); // สร้าง state สำหรับเก็บข้อมูลผู้ใช้
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [loadingEvent, setLoadingEvent] = useState(false);
+  const navigate = useNavigate();
 
 
   const [formData, setFormData] = useState({
@@ -167,24 +170,45 @@ const Myactivity = () => {
       console.log('No userId found in localStorage');
     }
   }, []);
+ 
+  const listRegister = (eventID) => {
+    console.log('รายชื่อถูกคลิกแล้ว, eventID:', eventID);
+    navigate(`/listregister?eventID=${eventID}`);
+  };
+
+  const handleOpenDetailDialog = (id) => {
+    setLoadingEvent(true);
+    setError(null);
   
-
-
-  const [openDetails, setOpenDetails] = useState(false); 
-  const handleOpenDetails = (id) => {
-    // ดึงข้อมูลกิจกรรมจาก API ตาม eventId
+    // Ensure you are using eventId instead of id
     fetch(`http://127.0.0.1:8000/api/events/${id}/`)
-      .then((response) => response.json())
-      .then((data) => {
-        setSelectedEvent(data);  // เก็บข้อมูลกิจกรรมที่ดึงมาใน state
-        setOpenDetails(true);    // เปิดโมดาลแสดงรายละเอียด
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+        
       })
-      .catch((error) => console.error('Error fetching event details:', error));
+      .then((data) => {
+        setSelectedEvent(data);
+        console.log('Selected Event:', data);
+        console.log('Image Filename:', data.event_img);
+        setOpenDetailDialog(true);
+      })
+      .catch((error) => {
+        console.error('Error fetching event details:', error);
+        setError('Failed to load event details. Please try again later.');
+      })
+      .finally(() => {
+        setLoadingEvent(false);
+      });
   };
-  const handleCloseDetails = () => {
-    setOpenDetails(false); // ปิดโมดาล
-    setSelectedEvent(null); // ล้างข้อมูลกิจกรรมเมื่อปิดโมดาล
+  // Function to close the dialog
+  const handleCloseDetailDialog = () => {
+    setOpenDetailDialog(false);
+    setSelectedEvent(null);
   };
+
 
   const deleteEventById = (id) => {
     const confirmDelete = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรม?`);
@@ -434,11 +458,21 @@ const Myactivity = () => {
                     <TableCell>{request.event.event_name}</TableCell>
                     <TableCell>{request.event.type}</TableCell>
                     <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
-                    <TableCell>{request.event.amount}</TableCell>
+                    <TableCell>
+                    {request.event.amount}
+                    {status === 'อนุมัติ' && (
+                      <span
+                        onClick={() => listRegister(request.event.event_id)}
+                        style={{ color: 'blue', textDecoration: 'none', cursor: 'pointer', marginLeft: '8px' }}
+                      >
+                        รายชื่อ
+                      </span>
+                    )}
+                  </TableCell>
                     <TableCell>
                       <Description 
                         style={{ cursor: 'pointer' }} 
-                        onClick={() => handleOpenDetails(request.event.event_id)} 
+                        onClick={() => handleOpenDetailDialog(request.event.event_id)}
                       />
                       <Edit style={{ cursor: 'pointer' }} />
                       <Delete 
@@ -457,8 +491,6 @@ const Myactivity = () => {
       </Box>
     );
   };
-  
-
   return (
     <Box sx={{ display: 'flex', padding: 2 }}>
       <Sidebar />
@@ -486,8 +518,8 @@ const Myactivity = () => {
             เพิ่มกิจกรรม
           </Button>
 
-  {/* Form for Adding Event */}
-  <Dialog open={open} onClose={handleCloseForm} maxWidth="md" fullWidth>
+    {/* Form for Adding Event */}
+    <Dialog open={open} onClose={handleCloseForm} maxWidth="md" fullWidth>
       <DialogTitle>
           สร้างกิจกรรม
           <IconButton
@@ -673,44 +705,39 @@ const Myactivity = () => {
         </Box>
       </DialogContent>
     </Dialog>
-    {/* The Dialog for showing details* */}
-    <Dialog open={openDetails} onClose={handleCloseDetails} maxWidth="md" fullWidth>
-  <DialogTitle>
-    รายละเอียดกิจกรรม
-    <IconButton
-      aria-label="close"
-      onClick={handleCloseDetails}
-      sx={{
-        position: 'absolute',
-        right: 8,
-        top: 8,
-        color: (theme) => theme.palette.grey[500],
-      }}
-    >
-      <CloseIcon />
-    </IconButton>
-  </DialogTitle>
-  <DialogContent>
-    {selectedEvent && (
-      <Box>
-        <Typography variant="h6">{selectedEvent.event_name}</Typography>
-        <Typography variant="body1">หมวดหมู่: {selectedEvent.type}</Typography>
-        <Typography variant="body1">สถานที่: {selectedEvent.address}, {selectedEvent.province}</Typography>
-        <Typography variant="body1">รายละเอียด: {selectedEvent.detail}</Typography>
-        <Typography variant="body1">จำนวนคนลงทะเบียน: {selectedEvent.amount}</Typography>
-        <Typography variant="body1">วันที่จัด: {selectedEvent.startdate} - {selectedEvent.enddate}</Typography>
-        <Typography variant="body1">เวลาจัด: {selectedEvent.timestart}</Typography>
-        {selectedEvent.event_img && (
-          <img
-            src={URL.createObjectURL(selectedEvent.event_img)}
-            alt="Event"
-            style={{ width: '100%', height: 'auto', marginBottom: '20px' }}
-          />
-        )}
-      </Box>
-    )}
-  </DialogContent>
-</Dialog>
+    
+{/* Dialog for showing event details */}
+<Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="lg" fullWidth>
+        <DialogTitle>
+          {selectedEvent?.event_name}
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseDetailDialog}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Box>
+            {selectedEvent?.event_img && ( <img src={selectedEvent.event_img}  alt={selectedEvent.event_name} style={{ width: '20%', marginTop: '10px', borderRadius: '8px' }} />)}
+            <Typography variant="body1"><strong>ประเภท:</strong> {selectedEvent?.type}</Typography>
+            <Typography variant="body1"><strong>สถานที่:</strong> {selectedEvent?.address}</Typography>
+            <Typography variant="body1"><strong>จังหวัด:</strong> {selectedEvent?.province}</Typography>
+            <Typography variant="body1"><strong>รายละเอียด:</strong> {selectedEvent?.detail}</Typography>
+            <Typography variant="body1"><strong>จำนวนที่รับ:</strong> {selectedEvent?.amount}</Typography>
+            <Typography variant="body1"><strong>วันที่เริ่มกิจกรรม:</strong> {selectedEvent?.startdate} </Typography>
+            <Typography variant="body1"><strong>วันที่สิ้นสุดกิจกรรม:</strong> {selectedEvent?.enddate}</Typography>
+            <Typography variant="body1"><strong>เวลา:</strong> {selectedEvent?.timestart}</Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+   
 
           {/* Tables for Approved, Pending, and Rejected Activities */}
           {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
