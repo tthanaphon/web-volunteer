@@ -3,6 +3,7 @@ import { Description, Edit, Delete } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import Sidebar from './Sidebar';
 import React, { useState, useEffect } from 'react';
+
 import AddIcon from '@mui/icons-material/Add';
 
 const Myactivity = () => {
@@ -11,6 +12,12 @@ const Myactivity = () => {
   const [userId, setUserId] = useState(null);
   const [UserData, setUserData] = useState(null); // สร้าง state สำหรับเก็บข้อมูลผู้ใช้
   const [open, setOpen] = useState(false);
+  const [data, setData] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
   const [formData, setFormData] = useState({
     event_name: '',
     type: '',
@@ -152,8 +159,7 @@ const Myactivity = () => {
       fetch(`http://127.0.0.1:8000/api/users/${storedUserId}/`)
         .then((response) => response.json())
         .then((data) => {
-          // สมมุติว่าข้อมูลที่ดึงมาเป็น { name: 'John Doe', tel: '0123456789' }
-          setUserData({ name: data.name, tel: data.tel });
+          setUserData({ name: data.name, tel: data.tel, email: data.email,img:data.user_img });
           console.log('User data fetched:', data);
         })
         .catch((error) => console.error('Error fetching user data:', error));
@@ -204,58 +210,204 @@ const Myactivity = () => {
     });
   };
   
+  // const handleSubmit = () => {
+  //   console.log('User ID in formData:', formData.user);
+  //   const isFormValid = Object.values(formData).every((field) => field !== '');
+  //   if (!isFormValid) {
+  //     alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+  //     return;
+  //   }
+  //   const data = new FormData();
+  //   Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+  //   if (eventImg) data.append('event_img', eventImg);
+  //   let eventId
+  //   fetch('http://127.0.0.1:8000/api/events/', { method: 'POST', body: data })
+  //     .then((response) => response.json().then((data) => ({ status: response.status, data })))
+  //     .then(({ status, data }) => {
+  //       if (status === 400) console.error('Bad Request:', data);
+  //       else console.log('Event created:', data);
+  //       eventId = data.event_id;
+  //       console.log('Event ID:', eventId);
+  //       handleCloseForm();
+  //     })
+  //     .catch((error) => console.error('Error creating event:', error));
+
+  //     //สร้าง request โยน event.id เข้าไป
+  //     const data_req = new FormData();
+  //     data_req.append('event', eventId);
+  //     data_req.append('comment', "");
+  //     data_req.append('status', "รออนุมัติ");
+
+  //     console.log("data_req",data_req)
+  //     // Send request to the API
+  //     fetch('http://127.0.0.1:8000/api/requests/', {
+  //       method: 'POST',
+  //       body: data_req,
+  //     })
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         console.log('Request created:', data);
+  //       })
+  //       .catch((error) => {
+  //         console.error('Error creating request:', error);
+  //       });
+  // };
+  
   const handleSubmit = () => {
     console.log('User ID in formData:', formData.user);
+    
+    // Validate form fields
     const isFormValid = Object.values(formData).every((field) => field !== '');
     if (!isFormValid) {
       alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       return;
     }
+  
+    // Create form data for event submission
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     if (eventImg) data.append('event_img', eventImg);
   
-    fetch('http://127.0.0.1:8000/api/events/', { method: 'POST', body: data })
-      .then((response) => response.json().then((data) => ({ status: response.status, data })))
-      .then(({ status, data }) => {
-        if (status === 400) console.error('Bad Request:', data);
-        else console.log('Event created:', data);
-        handleCloseForm();
+    // POST request to create a new event
+    fetch('http://127.0.0.1:8000/api/events/', {
+      method: 'POST',
+      body: data,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to create event: ' + response.statusText);
+        }
+        return response.json();
       })
-      .catch((error) => console.error('Error creating event:', error));
+      .then((data) => {
+        console.log('Event created:', data);
+        const eventId = data.event_id;
+  
+        // Prepare request data
+        const data_req = {
+          comment: "",
+          status: "รออนุมัติ",
+          event: eventId,
+        };
+  
+        // POST request to create a new request
+        return fetch('http://127.0.0.1:8000/api/requests/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data_req),
+        });
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to create request: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Request created:', data);
+        handleCloseForm();
+        window.location.reload()
+      })
+      .catch((error) => {
+        console.error('Error during form submission:', error);
+        alert('An error occurred while submitting the form. Please try again.');
+      });
   };
   
+  // useEffect(() => {
+  //   if (userId) {
+  //     console.log('Current userId:', userId);
+  
+      // Fetch requests from the API
+  //     fetch('http://127.0.0.1:8000/api/requests/')
+  //       .then((response) => {
+  //         if (!response.ok) {
+  //           throw new Error('Failed to fetch requests: ' + response.statusText);
+  //         }
+  //         return response.json();
+  //       })
+  //       .then((data) => {
+  //         // Filter requests based on `userId`
+  //         const filteredRequests = data.filter((request) => {
+  //           // Check if event is an object and contains user information
+  //           if (typeof request.event === 'object' && request.event.user) {
+  //             return request.event.user === parseInt(userId);
+  //           }
+  //           return false;
+  //         });
+  
+  //         // Set filtered requests or log if no matches are found
+  //         if (filteredRequests.length > 0) {
+  //           console.log('Filtered requests:', filteredRequests);
+  //           setRequests(filteredRequests);
+  //         } else {
+  //           console.log('No matching requests for the current user.');
+  //         }
+  //       })
+  //       .catch((error) => console.error('Error fetching requests:', error));
+  //   } else {
+  //     console.log('User ID is not available.');
+  //   }
+  // }, [userId]);
+  
+  useEffect(() => {
+    const fetchRequestsAndEvents = async () => {
+        try {
+            const [requestsResponse, eventsResponse] = await Promise.all([
+                fetch('http://127.0.0.1:8000/api/requests/'),
+                fetch('http://127.0.0.1:8000/api/events/')
+            ]);
 
-useEffect(() => {
-  if (userId) {
-    console.log('Current userId:', userId); // แสดง userId ใน console
-    
-    // เรียก API เพื่อดึงข้อมูลคำร้อง
-    fetch('http://127.0.0.1:8000/api/requests/')
-      .then((response) => response.json())
-      .then((data) => {
-        // ตรวจสอบว่า `event.user` มีค่าตรงกับ `userId` ที่ได้มา
-        const filteredRequests = data.filter(
-          (request) => request.event.user === parseInt(userId)
-        );
+            if (!requestsResponse.ok || !eventsResponse.ok) {
+                throw new Error(`HTTP error! Status: ${requestsResponse.status} ${eventsResponse.status}`);
+            }
 
-        // ถ้าค่าตรงกัน จึงตั้งค่าข้อมูลคำร้องที่กรองแล้ว
-        if (filteredRequests.length > 0) {
-          console.log('Filtered requests:', filteredRequests); // ตรวจสอบข้อมูลที่กรองแล้ว
-          setRequests(filteredRequests);
-        } else {
-          console.log('No matching requests for the current user.');
+            const requestsResult = await requestsResponse.json();
+            const eventsResult = await eventsResponse.json();
+
+            console.log('Fetched request data:', requestsResult);
+            console.log('Fetched event data:', eventsResult);
+
+            setEvents(eventsResult);
+
+            if (userId) {
+                // Map event_id to event details
+                const eventMap = eventsResult.reduce((acc, event) => {
+                    acc[event.event_id] = event; // Store the full event object
+                    return acc;
+                }, {});
+
+                // Log eventMap to check its structure
+                console.log('Event Map:', eventMap);
+
+                // Filter requests based on userId associated with event and include event details
+                const matchingRequests = requestsResult
+                    .filter(request => eventMap[request.event] && eventMap[request.event].user === parseInt(userId, 10))
+                    .map(request => ({
+                        ...request,
+                        event: eventMap[request.event] // Add full event details to each request
+                    }));
+
+                // Log matchingRequests to see what is being matched
+                console.log(`Matching requests for userId ${userId}:`, matchingRequests);
+                setRequests(matchingRequests);
+            } else {
+                console.log('UserId is not available for filtering requests.');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
-      })
-      .catch((error) => console.error('Error fetching requests:', error));
-  } else {
-    console.log('User ID is not available.');
-  }
-}, [userId]);
+    };
 
-  
-  
-  
+    fetchRequestsAndEvents();
+}, [userId]);
+;
+
   const renderTable = (title, status) => {
     const filteredRequests = requests.filter((request) => request.status === status);
   
@@ -264,40 +416,44 @@ useEffect(() => {
     return (
       <Box p={3}>
         <Typography variant="h6" mt={3}>{title}</Typography>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ชื่อกิจกรรม</TableCell>
-                <TableCell>ประเภท</TableCell>
-                <TableCell>วันจัดกิจกรรม</TableCell>
-                <TableCell>จำนวนคนลงทะเบียน</TableCell>
-                <TableCell> * </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredRequests.map((request) => (
-                <TableRow key={request.request_id}>
-                  <TableCell>{request.event.event_name}</TableCell>
-                  <TableCell>{request.event.type}</TableCell>
-                  <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
-                  <TableCell>{request.event.amount}</TableCell>
-                  <TableCell>
-                    <Description 
-                      style={{ cursor: 'pointer' }} 
-                      onClick={() => handleOpenDetails(request.event.event_id)} 
-                    />
-                    <Edit style={{ cursor: 'pointer' }} />
-                    <Delete 
-                      style={{ cursor: 'pointer' }} 
-                      onClick={() => deleteEventById(request.event.event_id)} 
-                    />
-                  </TableCell>
+        {filteredRequests.length > 0 ? (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ชื่อกิจกรรม</TableCell>
+                  <TableCell>ประเภท</TableCell>
+                  <TableCell>วันจัดกิจกรรม</TableCell>
+                  <TableCell>จำนวนคนลงทะเบียน</TableCell>
+                  <TableCell> * </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredRequests.map((request) => (
+                  <TableRow key={request.request_id}>
+                    <TableCell>{request.event.event_name}</TableCell>
+                    <TableCell>{request.event.type}</TableCell>
+                    <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
+                    <TableCell>{request.event.amount}</TableCell>
+                    <TableCell>
+                      <Description 
+                        style={{ cursor: 'pointer' }} 
+                        onClick={() => handleOpenDetails(request.event.event_id)} 
+                      />
+                      <Edit style={{ cursor: 'pointer' }} />
+                      <Delete 
+                        style={{ cursor: 'pointer' }} 
+                        onClick={() => deleteEventById(request.event.event_id)} 
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Typography variant="body2" mt={2}>ไม่มีคำขอที่ตรงกับสถานะ {status}</Typography>
+        )}
       </Box>
     );
   };
@@ -308,16 +464,23 @@ useEffect(() => {
       <Sidebar />
       <Box flexGrow={1} bgcolor="#f5f5f5" p={3}>
         <Paper elevation={2} sx={{ padding: 3 }}>
-          <Paper elevation={3} sx={{ padding: 3, marginBottom: 4, borderRadius: '50' }}>
-            <Typography variant="h5" gutterBottom>โปรไฟล์</Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="body1">อาสาบ้านดินไทย</Typography>
-                <Typography variant="body1">Tel: 369 258 147</Typography>
-                <Typography variant="body1">Email: guyhawkins@gmail.com</Typography>
-              </Grid>
-            </Grid>
-          </Paper>
+        <Paper elevation={3} sx={{ padding: 3, marginBottom: 4, borderRadius: '50' }}>
+  <Typography variant="h5" gutterBottom>โปรไฟล์</Typography>
+  <Grid container spacing={2}>
+    <Grid item xs={12} md={6}>
+      {UserData ? (
+        <>
+          <Typography variant="body1">ชื่อ: {UserData.name}</Typography>
+          <Typography variant="body1">Tel: {UserData.tel}</Typography>
+          <Typography variant="body1">Email: {UserData.email}</Typography>
+        </>
+      ) : (
+        <Typography variant="body1">กำลังโหลดข้อมูล...</Typography>
+      )}
+    </Grid>
+  </Grid>
+</Paper>
+
 
           <Button variant="contained" color="primary" onClick={handleOpenForm} startIcon={<AddIcon />}>
             เพิ่มกิจกรรม
