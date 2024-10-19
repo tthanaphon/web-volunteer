@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 
 const Myactivity = () => {
+  const [openEditForm, setOpenEditForm] = useState(false);
+  const [editEventData, setEditEventData] = useState(null);
   const [requests, setRequests] = useState([]);  // เก็บข้อมูลคำร้องทั้งหมด
   const [selectedEvent, setSelectedEvent] = useState(null); 
   const [userId, setUserId] = useState(null);
@@ -19,6 +21,7 @@ const Myactivity = () => {
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(false);
   const navigate = useNavigate();
+  const [registrations, setRegistrations] = useState([]);
 
 
   const [formData, setFormData] = useState({
@@ -209,7 +212,58 @@ const Myactivity = () => {
     setSelectedEvent(null);
   };
 
-
+  const handleOpenEditForm = (event, request) => {
+    setEditEventData({ ...event, requestStatus: request.status });
+    setFormData({
+      ...formData,
+      event_name: event.event_name,
+      type: event.type,
+      address: event.address,
+      province: event.province,
+      detail: event.detail,
+      amount: event.amount,
+      startdate: event.startdate,
+      enddate: event.enddate,
+      timestart: event.timestart,
+      date_create: new Date().toISOString().slice(0, 16),
+      user: event.user,
+    });
+    setEventImg(null);
+    setOpenEditForm(true);
+  };
+  
+  const handleCloseEditForm = () => {
+    setOpenEditForm(false);
+    setEditEventData(null);
+  };
+  const handleUpdate = () => {
+    if (!editEventData) return;
+  
+    const data = new FormData();
+    Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+    if (eventImg) data.append('event_img', eventImg);
+  
+    fetch(`http://127.0.0.1:8000/api/events/${editEventData.event_id}/`, {
+      method: 'PUT',
+      body: data,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to update event: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Event updated:', data);
+        handleCloseEditForm();
+        window.location.reload(); // Reload the page to see the updated list
+      })
+      .catch((error) => {
+        console.error('Error updating event:', error);
+        alert('An error occurred while updating the event. Please try again.');
+      });
+  };
+  
   const deleteEventById = (id) => {
     const confirmDelete = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรม?`);
     
@@ -233,6 +287,41 @@ const Myactivity = () => {
       [name]: name === 'timestart' ? `${value}:00` : value 
     });
   };
+  
+  const fetchRegistrations = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/registers/');
+      const data = await response.json();
+      setRegistrations(data);
+    } catch (error) {
+      console.error('Error fetching registrations:', error);
+    }
+  };
+  
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/events/');
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchEvents();
+    fetchRegistrations();
+  }, []);
+  
+  const countRegistrationsForEvent = (eventID) => {
+    return registrations.filter((registration) => registration.event === eventID).length; // Count registrations per event
+  };
+  
+  // Map each event to its registration count
+  const eventsWithRegistrationCount = events.map((event) => ({
+    ...event,
+    registrationCount: countRegistrationsForEvent(event.id),
+  }));
   
   // const handleSubmit = () => {
   //   console.log('User ID in formData:', formData.user);
@@ -431,35 +520,283 @@ const Myactivity = () => {
     fetchRequestsAndEvents();
 }, [userId]);
 ;
+const renderEditForm = () => {
+  if (!editEventData) return null;
+  const { requestStatus } = editEventData;
+{/* Dialog for edit details */}
+  return (
+    <Dialog open={openEditForm} onClose={handleCloseEditForm} maxWidth="md" fullWidth>
+      <DialogTitle>
+        แก้ไขกิจกรรม 
+        <IconButton
+          aria-label="close"
+          onClick={handleCloseEditForm}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ padding: 2 }}>
+          <Grid container spacing={2}>
+            {/* แสดงฟิลด์ตามสถานะคำร้อง */}
+            {requestStatus === 'อนุมัติ' ? (
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="วันที่เริ่มกิจกรรม"
+                    name="startdate"
+                    type="date"
+                    fullWidth
+                    onChange={handleChange}
+                    value={formData.startdate}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="วันสิ้นสุดกิจกรรม"
+                    name="enddate"
+                    type="date"
+                    fullWidth
+                    onChange={handleChange}
+                    value={formData.enddate}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="จำนวนที่รับ"
+                    name="amount"
+                    fullWidth
+                    onChange={handleChange}
+                    type="number"
+                    value={formData.amount}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="เวลาจัดกิจกรรม"
+                    name="timestart"
+                    type="time"
+                    fullWidth
+                    onChange={handleChange}
+                    value={formData.timestart.slice(0, 5)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+              </>
+            ) : (
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="ชื่อกิจกรรม"
+                    name="event_name"
+                    fullWidth
+                    onChange={handleChange}
+                    value={formData.event_name}
+                  />
+                </Grid>
+                {/* หมวดหมู่ */}
+             <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>หมวดหมู่</InputLabel>
+                <Select
+                  label="หมวดหมู่"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                >
+                  {eventTypes.map((eventType) => (
+                    <MenuItem key={eventType.value} value={eventType.value}>
+                      {eventType.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-  const renderTable = (title, status) => {
-    const filteredRequests = requests.filter((request) => request.status === status);
-  
-    if (filteredRequests.length === 0) return null;
-  
-    return (
-      <Box p={3}>
-        <Typography variant="h6" mt={3}>{title}</Typography>
-        {filteredRequests.length > 0 ? (
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ชื่อกิจกรรม</TableCell>
-                  <TableCell>ประเภท</TableCell>
-                  <TableCell>วันจัดกิจกรรม</TableCell>
-                  <TableCell>จำนวนคนลงทะเบียน</TableCell>
-                  <TableCell> * </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredRequests.map((request) => (
-                  <TableRow key={request.request_id}>
-                    <TableCell>{request.event.event_name}</TableCell>
-                    <TableCell>{request.event.type}</TableCell>
-                    <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
-                    <TableCell>
-                    {request.event.amount}
+            {/* สถานที่จัด */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="สถานที่จัด"
+                name="address"
+                fullWidth
+                onChange={handleChange}
+                value={formData.address}
+              />
+            </Grid>
+
+            {/* จังหวัด */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>จังหวัด</InputLabel>
+                <Select
+                  label="จังหวัด"
+                  name="province"
+                  value={formData.province}
+                  onChange={handleChange}
+                >
+                  {provinces.map((province) => (
+                    <MenuItem key={province.value} value={province.value}>
+                      {province.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+                                    
+            {/* รายละเอียด */}
+            <Grid item xs={12}>
+              <TextField
+                label="รายละเอียด"
+                name="detail"
+                fullWidth
+                multiline
+                rows={4}
+                onChange={handleChange}
+                value={formData.detail}
+              />
+            </Grid>
+
+            {/* จำนวนที่รับ */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="จำนวนที่รับ"
+                name="amount"
+                fullWidth
+                onChange={handleChange}
+                type="number"
+                value={formData.amount}
+              />
+            </Grid>
+
+            {/* วันที่เริ่มกิจกรรม */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="วันที่เริ่มกิจกรรม"
+                name="startdate"
+                type="date"
+                fullWidth
+                onChange={handleChange}
+                value={formData.startdate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+
+            {/* วันสิ้นสุดกิจกรรม */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="วันสิ้นสุดกิจกรรม"
+                name="enddate"
+                type="date"
+                fullWidth
+                onChange={handleChange}
+                value={formData.enddate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+
+            {/* เวลาจัดกิจกรรม */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="เวลาจัดกิจกรรม"
+                name="timestart"
+                type="time"
+                fullWidth
+                onChange={handleChange}  // เรียกใช้ handleChange ที่อัปเดตแล้ว
+                value={formData.timestart.slice(0, 5)} // แสดงแค่ HH:MM ใน input แต่เก็บ HH:MM:SS
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+          {/* วันที่สร้างกิจกรรม */}
+          <Grid item xs={12} md={6}>
+          <TextField
+            label="วันที่สร้างกิจกรรม"
+            name="date_create"
+            type="datetime-local"  // รูปแบบ datetime-local สำหรับดึงวันที่และเวลา
+            fullWidth
+            value={formData.date_create}  // เก็บค่าของ date_create ใน formData
+            InputProps={{
+              readOnly: true,  // ทำให้ไม่สามารถแก้ไขข้อมูลใน TextField ได้
+            }}
+            InputLabelProps={{
+              shrink: true,  // ทำให้ label ยังคงอยู่เมื่อมีค่าในช่อง TextField
+            }}
+          />
+        </Grid>
+          {/* รายชื่อผู้จัดกิจกรรม */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="ผู้จัดกิจกรรม"
+              fullWidth
+              value={UserData ? `${UserData.name} (${UserData.tel})` : ''} // ตรวจสอบว่า UserData มีค่าหรือไม่ก่อนแสดง
+              InputProps={{
+               
+              }}
+            />
+          </Grid>
+                  {/* อัปโหลดไฟล์รูปภาพ */}
+                  <Grid item xs={12} md={6}>
+                    <input
+                      accept="image/*"
+                      type="file"
+                      onChange={handleFileChange}
+                    />
+                  </Grid>
+              </>
+            )}
+          </Grid>
+          <Box mt={3} display="flex" justifyContent="flex-end">
+            <Button variant="contained" color="primary" onClick={handleUpdate}>
+              แก้ไขกิจกรรม
+            </Button>
+          </Box>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};
+{/* showTable */}
+const renderTable = (title, status) => {
+  const filteredRequests = requests.filter((request) => request.status === status);
+
+  return filteredRequests.length > 0 ? (
+    <Box p={3}>
+      <Typography variant="h6" mt={3}>{title}</Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ชื่อกิจกรรม</TableCell>
+              <TableCell>ประเภท</TableCell>
+              <TableCell>วันจัดกิจกรรม</TableCell>
+              <TableCell>จำนวนคนลงทะเบียน</TableCell>
+              <TableCell> * </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRequests.map((request) => {
+              const registrationCount = countRegistrationsForEvent(request.event.event_id);
+
+              return (
+                <TableRow key={request.request_id}>
+                  <TableCell>{request.event.event_name}</TableCell>
+                  <TableCell>{request.event.type}</TableCell>
+                  <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
+                  <TableCell>
+                    {registrationCount}/{request.event.amount}
                     {status === 'อนุมัติ' && (
                       <span
                         onClick={() => listRegister(request.event.event_id)}
@@ -469,56 +806,57 @@ const Myactivity = () => {
                       </span>
                     )}
                   </TableCell>
-                    <TableCell>
-                      <Description 
-                        style={{ cursor: 'pointer' }} 
-                        onClick={() => handleOpenDetailDialog(request.event.event_id)}
+                  <TableCell>
+                    <Description
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleOpenDetailDialog(request.event.event_id)}
+                    />
+                    {status !== 'ไม่อนุมัติ' && (
+                      <Edit
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleOpenEditForm(request.event, request)}
                       />
-                      <Edit style={{ cursor: 'pointer' }} />
-                      <Delete 
-                        style={{ cursor: 'pointer' }} 
-                        onClick={() => deleteEventById(request.event.event_id)} 
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : (
-          <Typography variant="body2" mt={2}>ไม่มีคำขอที่ตรงกับสถานะ {status}</Typography>
-        )}
-      </Box>
-    );
-  };
-  return (
-    <Box sx={{ display: 'flex', padding: 2 }}>
-      <Sidebar />
-      <Box flexGrow={1} bgcolor="#f5f5f5" p={3}>
-        <Paper elevation={2} sx={{ padding: 3 }}>
-        <Paper elevation={3} sx={{ padding: 3, marginBottom: 4, borderRadius: '50' }}>
-  <Typography variant="h5" gutterBottom>โปรไฟล์</Typography>
-  <Grid container spacing={2}>
-    <Grid item xs={12} md={6}>
-      {UserData ? (
-        <>
-          <Typography variant="body1">ชื่อ: {UserData.name}</Typography>
-          <Typography variant="body1">Tel: {UserData.tel}</Typography>
-          <Typography variant="body1">Email: {UserData.email}</Typography>
-        </>
-      ) : (
-        <Typography variant="body1">กำลังโหลดข้อมูล...</Typography>
-      )}
-    </Grid>
-  </Grid>
-</Paper>
+                    )}
+                    <Delete
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => deleteEventById(request.event.event_id)}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  ) : (
+    <Typography variant="body2" mt={2}>ไม่มีคำขอที่ตรงกับสถานะ {status}</Typography>
+  );
+};
 
-
-          <Button variant="contained" color="primary" onClick={handleOpenForm} startIcon={<AddIcon />}>
-            เพิ่มกิจกรรม
-          </Button>
-
-    {/* Form for Adding Event */}
+{/*profile */}
+return (
+  <Box sx={{ display: 'flex', padding: 2 }}>
+    <Sidebar />
+    <Box flexGrow={1} bgcolor="#f5f5f5" p={3}>
+      <Paper elevation={2} sx={{ padding: 3 }}>
+      <Paper elevation={3} sx={{ padding: 3, marginBottom: 4, borderRadius: '50' }}>
+      <Typography variant="h5" gutterBottom>โปรไฟล์</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          {UserData ? (
+            <>
+              <Typography variant="body1">ชื่อ: {UserData.name}</Typography>
+              <Typography variant="body1">Tel: {UserData.tel}</Typography>
+              <Typography variant="body1">Email: {UserData.email}</Typography>
+              <Typography variant="body1"> {UserData.user_image}</Typography>
+            </>
+          ) : (
+            <Typography variant="body1">กำลังโหลดข้อมูล...</Typography>
+          )}
+        </Grid>
+      </Grid>
+      {/* Form for Adding Event */}
     <Dialog open={open} onClose={handleCloseForm} maxWidth="md" fullWidth>
       <DialogTitle>
           สร้างกิจกรรม
@@ -670,8 +1008,10 @@ const Myactivity = () => {
               name="date_create"
               type="datetime-local"  // รูปแบบ datetime-local สำหรับดึงวันที่และเวลา
               fullWidth
-              onChange={handleChange}  // อัปเดตค่าเมื่อมีการเปลี่ยนแปลง
               value={formData.date_create}  // เก็บค่าของ date_create ใน formData
+              InputProps={{
+                readOnly: true,  // ทำให้ไม่สามารถแก้ไขข้อมูลใน TextField ได้
+              }}
               InputLabelProps={{
                 shrink: true,  // ทำให้ label ยังคงอยู่เมื่อมีค่าในช่อง TextField
               }}
@@ -705,8 +1045,7 @@ const Myactivity = () => {
         </Box>
       </DialogContent>
     </Dialog>
-    
-{/* Dialog for showing event details */}
+    {/* Dialog for showing event details */}
 <Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="lg" fullWidth>
         <DialogTitle>
           {selectedEvent?.event_name}
@@ -737,16 +1076,18 @@ const Myactivity = () => {
           </Box>
         </DialogContent>
       </Dialog>
-   
-
-          {/* Tables for Approved, Pending, and Rejected Activities */}
-          {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
-          {renderTable('รออนุมัติ', 'รออนุมัติ')}
-          {renderTable('ไม่อนุมัติ', 'ไม่อนุมัติ')}
-        </Paper>
-      </Box>
+    </Paper>
+      <Button variant="contained" color="primary" onClick={handleOpenForm} startIcon={<AddIcon />}>เพิ่มกิจกรรม</Button>
+        {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
+        {renderTable('รออนุมัติ', 'รออนุมัติ')}
+        {renderTable('ไม่อนุมัติ', 'ไม่อนุมัติ')}
+        {renderEditForm()}
+      </Paper>
     </Box>
-  );
+  </Box>
+  
+);
+
 };
 
 export default Myactivity;
