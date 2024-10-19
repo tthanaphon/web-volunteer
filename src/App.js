@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom'; 
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
 import SignUpPage from './Front-end/SignUp';
 import Detailpage from './Components/Detailpage';
 import RegistrationForm from './Components/Register';
 import JoinEvent from './Front-end/JoinEventpage';
+import Navbar from './Front-end/Navbar';
 
 const theme = createTheme();
 
@@ -16,7 +17,6 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    // Check if the user is authenticated when the app loads
     const authStatus = localStorage.getItem('isAuthenticated');
     const storedUserId = localStorage.getItem('userID');
     if (authStatus === 'true') {
@@ -28,57 +28,37 @@ function App() {
   const handleLogin = (userId) => {
     setIsAuthenticated(true);
     setUserId(userId);
-    localStorage.setItem('isAuthenticated', 'true'); // Store authentication status
-    localStorage.setItem('userID', userId); // Store user ID
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userID', userId);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated'); // Remove authentication status
-    localStorage.removeItem('userID'); // Remove user ID
-    setIsAuthenticated(false); // Update state
-    setUserId(null); // Clear user ID from state
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userID');
+    setIsAuthenticated(false);
+    setUserId(null);
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="App">
-        {location.pathname !== '/login' && isAuthenticated && (
-          <button onClick={handleLogout}>Logout</button> // Logout button
+      <Box className="App">
+        {location.pathname !== '/login' && location.pathname !== '/signup' && isAuthenticated && (
+          <button onClick={handleLogout}>Logout</button>
         )}
-        <div className='Content'>
+        <Box className='Content' sx={{ marginTop: '20px' }}> {/* Adjust margin for Navbar height */}
+          {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup' && <Navbar onLogout={handleLogout} />}
           <Routes>
-            <Route 
-              path="/login" 
-              element={<LoginPage onLogin={handleLogin} />} 
-            />
-            <Route 
-              path="/signup" 
-              element={<SignUpPage />}  // Route for Sign Up page
-            />
-            <Route 
-              path="/home" 
-              element={isAuthenticated ? <HomePage onLogout={handleLogout} userId={userId} /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/event-detail" 
-              element={isAuthenticated ? <Detailpage userId={userId} /> : <Navigate to="/login" />} 
-            /> 
-            <Route 
-              path="/event-register" 
-              element={isAuthenticated ? <RegistrationForm userId={userId} /> : <Navigate to="/login" />} 
-            /> 
-            <Route 
-              path="/activity-attend" 
-              element={isAuthenticated ? <JoinEvent userId={userId} /> : <Navigate to="/login" />} 
-            /> 
-            <Route 
-              path="*" 
-              element={<Navigate to="/login" />} 
-            />
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/home" element={isAuthenticated ? <HomePage onLogout={handleLogout} userId={userId} /> : <Navigate to="/login" />} />
+            <Route path="/event-detail" element={isAuthenticated ? <Detailpage userId={userId} /> : <Navigate to="/login" />} /> 
+            <Route path="/event-register" element={isAuthenticated ? <RegistrationForm userId={userId} /> : <Navigate to="/login" />} /> 
+            <Route path="/activity-attend" element={isAuthenticated ? <JoinEvent userId={userId} /> : <Navigate to="/login" />} /> 
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
-        </div>
-      </div>
+        </Box>
+      </Box>
     </ThemeProvider>
   );
 }
