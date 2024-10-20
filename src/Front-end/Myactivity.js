@@ -388,12 +388,19 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
   // };
   
   const handleSubmit = () => {
-    console.log('User ID in formData:', formData.user);
-    
-    // Validate form fields
-    const isFormValid = Object.values(formData).every((field) => field !== '');
+    // Validate that no fields are empty (except 'event_img' since it's optional)
+    const isFormValid = Object.entries(formData).every(
+      ([key, value]) => key === 'event_img' || (value && value !== '')
+    );
+  
+    // Additional validation: ensure 'amount' is greater than zero
+    if (formData.amount <= 0) {
+      alert('กรุณากรอกข้อมูลให้ถูกต้อง');
+      return;
+    }
+  
     if (!isFormValid) {
-      alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
   
@@ -446,7 +453,7 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
       })
       .catch((error) => {
         console.error('Error during form submission:', error);
-        alert('An error occurred while submitting the form. Please try again.');
+        alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       });
   };
   
@@ -1275,7 +1282,7 @@ return (
   <DialogContent>
     <Box>
     <Typography variant="body1" >
-      <strong>ชื่อกิจกรรม:</strong>{selectedEvent?.event_name}
+      <strong>ชื่อกิจกรรม:</strong> {selectedEvent?.event_name}
       </Typography>
       <Typography variant="body1">
         <strong>ประเภท:</strong> {selectedEvent?.type}
