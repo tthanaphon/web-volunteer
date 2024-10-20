@@ -948,7 +948,6 @@ const renderTable = (title, status) => {
   );
 };
 
-
 {/*profile */}
 return (
   <Box sx={{ display: 'flex', padding: 2 }}>
@@ -1204,10 +1203,8 @@ return (
                 }}
               />
             </Grid>
-
-          </Grid>
-          {/* วันที่สร้างกิจกรรม */}
-          <Grid item xs={12} md={6}>
+            {/* วันที่สร้างกิจกรรม */}
+            <Grid item xs={12} md={6}>
             <TextField
               label="วันที่สร้างกิจกรรม"
               name="date_create"
@@ -1233,15 +1230,15 @@ return (
               }}
             />
           </Grid>
-                  {/* อัปโหลดไฟล์รูปภาพ */}
-                  <Grid item xs={12} md={6}>
-                    <input
-                      accept="image/*"
-                      type="file"
-                      onChange={handleFileChange}
-                    />
-                  </Grid>
-              
+           {/* อัปโหลดไฟล์รูปภาพ */}
+           <Grid item xs={12} md={6}>
+            <input
+             accept="image/*"
+            type="file"
+            onChange={handleFileChange}
+             />
+             </Grid>
+          </Grid>  
           <Box mt={3} display="flex" justifyContent="flex-end">
             <Button variant="contained" color="primary" onClick={handleSubmit}>
               สร้างกิจกรรม
