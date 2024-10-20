@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 
 const Myactivity = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [openEditForm, setOpenEditForm] = useState(false);
   const [editEventData, setEditEventData] = useState(null);
   const [requests, setRequests] = useState([]);  // เก็บข้อมูลคำร้องทั้งหมด
@@ -23,7 +24,9 @@ const Myactivity = () => {
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
 
-
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
   const [formData, setFormData] = useState({
     event_name: '',
     type: '',
@@ -770,9 +773,17 @@ const renderEditForm = () => {
 };
 {/* showTable */}
 const renderTable = (title, status) => {
-  const filteredRequests = requests.filter((request) => request.status === status);
+  const filteredRequests = requests.filter((request) => 
+    request.status === status &&
+    (request.event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     request.event.type.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  return filteredRequests.length > 0 ? (
+  if (filteredRequests.length === 0) {
+    return null;
+  }
+
+  return (
     <Box p={3}>
       <Typography variant="h6" mt={3}>{title}</Typography>
       <TableContainer component={Paper}>
@@ -789,7 +800,6 @@ const renderTable = (title, status) => {
           <TableBody>
             {filteredRequests.map((request) => {
               const registrationCount = countRegistrationsForEvent(request.event.event_id);
-
               return (
                 <TableRow key={request.request_id}>
                   <TableCell>{request.event.event_name}</TableCell>
@@ -829,19 +839,27 @@ const renderTable = (title, status) => {
         </Table>
       </TableContainer>
     </Box>
-  ) : (
-    <Typography variant="body2" mt={2}>ไม่มีคำขอที่ตรงกับสถานะ {status}</Typography>
   );
 };
+
 
 {/*profile */}
 return (
   <Box sx={{ display: 'flex', padding: 2 }}>
     <Sidebar />
     <Box flexGrow={1} bgcolor="#f5f5f5" p={3}>
-      <Paper elevation={2} sx={{ padding: 3 }}>
-      <Paper elevation={3} sx={{ padding: 3, marginBottom: 4, borderRadius: '50' }}>
-      <Typography variant="h5" gutterBottom>โปรไฟล์</Typography>
+      <Paper elevation={3} sx={{ padding: 3, marginBottom: 10, borderRadius: '50' }}>
+      <Box
+      sx={{
+        borderRadius: '16px',
+        padding: 2,
+        backgroundColor: '#f5f5f5', // เปลี่ยนสีพื้นหลังตามที่ต้องการ
+        boxShadow: 3,
+      }}
+    >
+      <Typography variant="h5" gutterBottom>
+        โปรไฟล์
+      </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           {UserData ? (
@@ -856,6 +874,32 @@ return (
           )}
         </Grid>
       </Grid>
+    </Box>
+    <Box
+  sx={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2, // เพิ่มช่องว่างระหว่าง TextField และ Button
+    marginY: 2, // เพิ่มระยะห่างบน-ล่าง
+  }}
+>
+  <TextField
+    label="ค้นหากิจกรรม"
+    variant="outlined"
+    value={searchTerm}
+    onChange={handleSearchChange}
+    sx={{ flex: 1 }} // ใช้ flex เพื่อให้ TextField ขยายได้เต็มที่
+  />
+  <Button
+    variant="contained"
+    color="primary"
+    onClick={handleOpenForm}
+    startIcon={<AddIcon />}
+  >
+    เพิ่มกิจกรรม
+  </Button>
+</Box>
+
       {/* Form for Adding Event */}
     <Dialog open={open} onClose={handleCloseForm} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -1076,8 +1120,8 @@ return (
           </Box>
         </DialogContent>
       </Dialog>
-    </Paper>
-      <Button variant="contained" color="primary" onClick={handleOpenForm} startIcon={<AddIcon />}>เพิ่มกิจกรรม</Button>
+    
+
         {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
         {renderTable('รออนุมัติ', 'รออนุมัติ')}
         {renderTable('ไม่อนุมัติ', 'ไม่อนุมัติ')}
