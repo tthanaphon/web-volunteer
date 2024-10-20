@@ -6,15 +6,21 @@ import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import InfoIcon from '@mui/icons-material/Info';
 
+
+
+
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
+  
+ 
   const menu = [
     { text: 'หน้าหลัก', path: '/home', icon: <HomeIcon /> },
     { text: 'กิจกรรมของฉัน', path: '/activity-owner', icon: <EventIcon /> },
     { text: 'กิจกรรมที่ลงทะเบียน', path: '/activity-attend', icon: <InfoIcon /> },
   ];
+
+  
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -30,12 +36,12 @@ const Sidebar = () => {
         [`& .MuiDrawer-paper`]: {
           width: 240,
           boxSizing: 'border-box',
-          backgroundColor: '#032b03',
+          backgroundColor: '#475443',
         },
       }}
     >
-      <Box sx={{ textAlign: 'center', padding: 1, backgroundColor: '#d8de28' }}>
-        <Typography variant="h6" align="center" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+      <Box sx={{ textAlign: 'center', padding: 1, backgroundColor: '#475443' }}>
+        <Typography variant="h6" align="center" gutterBottom sx={{ fontSize: '1.5rem', fontWeight: 'bold' , color: '#FFFEFA' }}>
           Volunteer
         </Typography>
       </Box>
@@ -49,13 +55,13 @@ const Sidebar = () => {
             to={item.path}
             selected={location.pathname === item.path}
             sx={{
-              color: '#ffffff',
-              backgroundColor: location.pathname === item.path ? '#42823c' : 'transparent', // Background when selected
+              color: 'black',
+              backgroundColor: location.pathname === item.path ? 'white' : 'transparent', // Background when selected
               '&:hover': {
                 backgroundColor: '#ffffff',
-                color: '#000',
+                color: '#475443',
                 '& .MuiListItemIcon-root': {
-                  color: '#42823c',
+                  color: '#475443',
                 },
               },
             }}
@@ -75,6 +81,7 @@ const Sidebar = () => {
               color: '#ffffff',
             },
           }}
+
         >
           <ListItemIcon sx={{ color: '#ffffff' }}>
             <LogoutIcon />

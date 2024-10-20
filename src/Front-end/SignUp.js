@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Paper, CardActions } from '@mui/material';
+import { TextField, Button, Box, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -26,7 +26,7 @@ const SignUpPage = () => {
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault();
 
     const formDataToSend = new FormData(); // Create a FormData object
     for (const key in formData) {
@@ -34,9 +34,9 @@ const SignUpPage = () => {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/users/', formDataToSend, {
+      await axios.post('http://127.0.0.1:8000/api/users/', formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type for file uploads
+          'Content-Type': 'multipart/form-data', 
         },
       });
       alert('Registration successful');
@@ -53,19 +53,30 @@ const SignUpPage = () => {
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" height="100vh" bgcolor="#f5f5f5">
-      <Paper elevation={3} sx={{ padding: 4, width: '400px' }}>
-        <Typography variant="h5" gutterBottom>
+  <Box display="flex" height="100vh">
+    <Box flex={1} display="flex" justifyContent="center" alignItems="center" bgcolor="#475443" p={4}>
+      <Paper elevation={3} 
+        sx={{   
+          padding: 4, width: '400px', background:'#EA9715' ,borderRadius: '30px', 
+          boxShadow: '20px'}}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
           SIGN UP
         </Typography>
         {/* Form element for capturing input */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} >
           <TextField
             label="Name"
             name="name"
             variant="outlined"
             fullWidth
             margin="normal"
+            InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // ทำให้กรอบมน
+                background:'white'
+              },
+            }}
             value={formData.name}
             onChange={handleChange}
           />
@@ -75,6 +86,13 @@ const SignUpPage = () => {
             variant="outlined"
             fullWidth
             margin="normal"
+            InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // ทำให้กรอบมน
+                background:'white'
+              },
+            }}
             value={formData.username}
             onChange={handleChange}
           />
@@ -84,6 +102,13 @@ const SignUpPage = () => {
             variant="outlined"
             type="password"
             fullWidth
+            InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // ทำให้กรอบมน
+                background:'white'
+              },
+            }}
             margin="normal"
             value={formData.password}
             onChange={handleChange}
@@ -95,6 +120,13 @@ const SignUpPage = () => {
             type="email"
             fullWidth
             margin="normal"
+            InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // ทำให้กรอบมน
+                background:'white'
+              },
+            }}
             value={formData.email}
             onChange={handleChange}
           />
@@ -103,32 +135,46 @@ const SignUpPage = () => {
             name="tel"
             variant="outlined"
             type="tel"
+            maxRows={10}
             fullWidth
+            InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // ทำให้กรอบมน
+                background:'white'
+              },
+            }}
             margin="normal"
             value={formData.tel}
             onChange={handleChange}
           />
           {/* Submit button for the form */}
-          <Button variant="contained" color="primary" fullWidth type="submit">
+          <Button variant="contained" color="primary" fullWidth type="submit" sx={{background: '#475443'}}>
             CREATE ACCOUNT
           </Button>
         </form>
-        <CardActions>
-          <Button
-            size="small"
-            color="#d9e139"
-            onClick={handleSignUpRedirect}
-            sx={{
-              fontWeight: 'bold',
-              '&:hover': {
-                bgcolor: '#d9e139',
-              },
-            }}
-          >
-            Login
+  
+        <Typography variant="body2" align="center" sx={{ marginTop: 2 }}>
+            Already registered?{' '}
+          <Button onClick={handleSignUpRedirect} variant="text" color="primary">
+          Login
           </Button>
-        </CardActions>
+        </Typography>
+        
       </Paper>
+    </Box>
+    <Box
+        flex={1}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        sx={{
+          backgroundImage: `url(images/volunteer.jpg)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+      </Box>
     </Box>
   );
 };

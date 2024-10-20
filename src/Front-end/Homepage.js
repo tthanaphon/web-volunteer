@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent, CardActions, Button, MenuItem, Select } from '@mui/material';
+import { Box, Typography, Card, CardContent, CardActions, Button, MenuItem, Select  ,TextField} from '@mui/material';
 import Sidebar from './Sidebar'; // Assuming Sidebar is in the same directory
 import axios from 'axios';
 import dayjs from 'dayjs'; // import dayjs
@@ -7,6 +7,9 @@ import 'dayjs/locale/th';  // import locale ภาษาไทย
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import { useNavigate } from 'react-router-dom';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
 
 
 dayjs.locale('th'); // ตั้งค่า locale เป็นภาษาไทย
@@ -39,11 +42,13 @@ const HomePage = () => {
   const [province, setProvince] = useState('');
   const [typedateActivity, setTypedateActivity] = useState('ทั้งหมด');
   const [selectedActivity, setSelectedActivity] = useState('ทั้งหมด');
-  const [registrations, setRegistrations] = useState([]);
+  const [registrations, setRegistrations] = useState([]); //เก็บข้อมูลลงทะเบียน
   const [events, setEvents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // จัดเก็บค่าการค้นหา
   
   
   const navigate = useNavigate();
+  const userId = localStorage.getItem('userID');
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -68,15 +73,24 @@ const HomePage = () => {
     fetchRegistrations();
   }, []);
 
+
   const countRegistrationsForEvent = (eventID) => {
     return registrations.filter((registration) => registration.event === eventID).length; //นับจำนวนคนลงทะเบียน
   };
+ 
 
-
+  const isJoin = (eventID) => {
+    return registrations.some(
+      (registration) => registration.event === eventID &&  String(registration.user) === String(userId)
+    );
+  }
 
   const formatDate = (dateString) => {
     const date = dayjs(dateString);
     return date.format('D MMM YYYY'); // รูปแบบ: วัน เดือน ปี พ.ศ.
+  };
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const handleProvinceChange = (event) => {
@@ -88,14 +102,15 @@ const HomePage = () => {
   };
 
   // Filter events based on both selected activity and province
-  const filteredEvents = events.filter(event => {
+  const filteredEventsList = events.filter(event => {
     const typedate = event.startdate === event.enddate ? 'ระหว่างวัน' : 'ค้างคืน';
 
     const matchesActivity = selectedActivity === 'ทั้งหมด' || event.type === selectedActivity;
     const matchesProvince = !province || event.province === province;
     const matchesTypeDate = typedateActivity === 'ทั้งหมด' || typedate === typedateActivity;
+    const matchesSearchTerm = event.event_name.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesActivity && matchesProvince && matchesTypeDate;
+    return matchesActivity && matchesProvince && matchesTypeDate &&matchesSearchTerm;
   });
 
   const handleDetailsClick = (event) => {
@@ -117,55 +132,88 @@ const HomePage = () => {
       {/* Main content */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Typography variant="h4" gutterBottom>กิจกรรมอาสา</Typography>
-
-        <Box sx={{ display: 'flex', gap: 2, mb: 3 , }}>
-            <> 
-            <Typography variant="subtitle1">จังหวัด:</Typography>
-            <Select
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+           <> 
+          <Typography variant="h6" sx={{color: '#F6BE00', fontWeight: 'bold'}}>จังหวัด:</Typography>
+          <Select
             value={province}
             onChange={handleProvinceChange}
             displayEmpty
             sx={{
-                width: '250px',
-                borderRadius: '12px', // ทำให้กล่องเป็นมน
-                bgcolor: 'background.paper', // สีพื้นหลังของกล่อง
-                '& .MuiSelect-select': {
+              width: '250px',
+              height:'40px',
+              borderRadius: '12px', // ทำให้กล่องเป็นมน
+              bgcolor: 'background.paper', // สีพื้นหลังของกล่อง
+              '& .MuiSelect-select': {
                 padding: '5px', // ระยะห่างภายใน
-                },
+              },
             }}
-            >
+          >
             <MenuItem value="">
-                <em>ทั้งหมด</em>
+              <em>ทั้งหมด</em>
             </MenuItem>
             {provinceChoices.map((prov, index) => (
-                <MenuItem key={index} value={prov}>
+              <MenuItem key={index} value={prov}>
                 {prov}
-                </MenuItem>
+              </MenuItem>
             ))}
-            </Select>
-
-            <Typography variant="subtitle1">ประเภท:</Typography>
-            <Select
+          </Select>
+          
+          <Typography variant="h6" sx={{color: '#F6BE00', fontWeight: 'bold'}}>ประเภท:</Typography>
+          <Select
             value={typedateActivity}
             onChange={(e) => setTypedateActivity(e.target.value)}
             displayEmpty
             sx={{
-                width: '250px',
-                borderRadius: '12px', // ทำให้กล่องเป็นมน
-                bgcolor: 'background.paper', // สีพื้นหลังของกล่อง
-                '& .MuiSelect-select': {
+              width: '250px',
+              height:'40px',
+              borderRadius: '12px', // ทำให้กล่องเป็นมน
+              bgcolor: 'background.paper', // สีพื้นหลังของกล่อง
+              '& .MuiSelect-select': {
                 padding: '5px', // ระยะห่างภายใน
-                },
+              },
             }}
-            >
+          >
             {typedate.map((prov, index) => (
-                <MenuItem key={index} value={prov}>
+              <MenuItem key={index} value={prov}>
                 {prov}
-                </MenuItem>
+              </MenuItem>
             ))}
-            </Select>
-            </>
-        </Box>
+          </Select>
+          
+          <TextField
+            variant="outlined"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="ค้นหากิจกรรม"  // แสดงข้อความภายใน
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: '#9E9E9E' }} /> {/* ไอคอนค้นหา */}
+                </InputAdornment>
+              ),
+              notched: false, 
+            }}
+            sx={{
+              width: '400px', // กว้างตามดีไซน์
+              height: '40px', // ปรับความสูง
+              borderRadius: '30px', // ขอบมนมากขึ้น
+              bgcolor: 'background.paper', // สีพื้นหลังของกล่อง
+              ml: 'auto',
+              '& .MuiOutlinedInput-root': {
+                padding: '0px 15px', // ระยะห่างภายใน
+                borderRadius: '30px', // ขอบมนมากขึ้น
+                '& fieldset': {
+                  border: 'none', // ซ่อนขอบรอบกล่องค้นหา
+                },
+
+              },
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', // เงาเล็กน้อย
+            }}
+          />                                          
+        </>
+      </Box>
+
 
         {/* Activity Categories */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
@@ -180,8 +228,11 @@ const HomePage = () => {
                 }}
                 onClick={() => handleActivityClick(activity)}
               >
-                <CardContent>
-                  <Typography variant="h6">{activity}</Typography>
+                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <MenuBookIcon sx={{ color:'032b03' ,mr: 2 ,fontSize: 40}} />
+                  <Typography variant="h6"  sx={{ color: 'green', textAlign: 'center', mt: 1 ,fontWeight: 'bold' }}>
+                    {activity}
+                    </Typography>
                 </CardContent>
               </Card>
             </Box>
@@ -189,13 +240,13 @@ const HomePage = () => {
         </Box>
 
         {/* Recommended activities */}
-        <Typography variant="h6" sx={{ mt: 4 }}>กิจกรรม</Typography>
+        <Typography variant="h6" sx={{ mt: 4 ,color: '#F6BE00' , fontWeight:'bold'}}>กิจกรรม</Typography>
 
-        {filteredEvents.length === 0 ? (
+        {filteredEventsList.length === 0 ? (
           <Typography variant="subtitle1" color="textSecondary">ไม่มีกิจกรรม</Typography>
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' }, gap: 3 }}>
-            {filteredEvents.map((event, index) => (
+            {filteredEventsList.map((event, index) => (
               <Box key={index}>
                 <Card key={index}  sx={{ border: '2px solid green', borderRadius: '16px' }}>
                   <CardContent>
@@ -238,12 +289,18 @@ const HomePage = () => {
                     <Button
                         type="submit"
                         variant="contained"
-                        sx = {{backgroundColor :"#032b03"}}
+                        sx={{ backgroundColor: "#032b03" }}
                         color={countRegistrationsForEvent(event.event_id) >= event.amount ? 'error' : 'primary'} // เปลี่ยนสีปุ่มเป็นสีแดงถ้าจำนวนเต็ม
                         onClick={() => handleRegister(event.event_id, event.event_name)}
-                        disabled={countRegistrationsForEvent(event.event_id) >= event.amount} // ปุ่มจะคลิกไม่ได้ถ้าจำนวนผู้ลงทะเบียนเต็ม
+                        disabled={isJoin(event.event_id)||countRegistrationsForEvent(event.event_id) >= event.amount || dayjs().isAfter(dayjs(event.startdate))} // ปิดปุ่มถ้าเต็มหรือเลยวันเริ่มกิจกรรม
                     >
-                        {countRegistrationsForEvent(event.event_id) >= event.amount ? 'เต็มแล้ว' : 'ลงทะเบียน'} {/* เปลี่ยนข้อความในปุ่ม */}
+                         {isJoin(event.event_id)
+                          ? 'ลงทะเบียนกิจกรรมนี้แล้ว'
+                          : countRegistrationsForEvent(event.event_id) >= event.amount
+                          ? 'เต็มแล้ว'
+                          : dayjs().isAfter(dayjs(event.startdate))
+                          ? 'ปิดรับ'
+                          : 'ลงทะเบียน'}
                     </Button>
                 </CardActions>
                 </Card>
