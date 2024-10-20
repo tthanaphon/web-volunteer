@@ -1,11 +1,14 @@
-import {  MenuItem, Select, InputLabel, FormControl, TextField, Box, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
-import { Description, Edit, Delete } from '@mui/icons-material';
+import {  DialogActions,MenuItem, Select, InputLabel, FormControl, TextField, Box, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Grid, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Sidebar from './Sidebar';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import DeleteIcon from '@mui/icons-material/Delete';
+import DescriptionIcon from '@mui/icons-material/Description';
+import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import WarningIcon from '@mui/icons-material/Warning';
+
 
 const Myactivity = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +26,8 @@ const Myactivity = () => {
   const [loadingEvent, setLoadingEvent] = useState(false);
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+const [eventIdToDelete, setEventIdToDelete] = useState(null);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -266,22 +271,35 @@ const Myactivity = () => {
         alert('An error occurred while updating the event. Please try again.');
       });
   };
+  const handleOpenDeleteDialog = (id) => {
+    setEventIdToDelete(id);
+    setOpenDeleteDialog(true);
+  };
   
-  const deleteEventById = (id) => {
-    const confirmDelete = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรม?`);
-    
-    if (confirmDelete) {
-      fetch(`http://127.0.0.1:8000/api/events/${id}/`, { method: 'DELETE' })
+  const handleCloseDeleteDialog = () => {
+    setEventIdToDelete(null);
+    setOpenDeleteDialog(false);
+  };
+  
+  const confirmDeleteEvent = () => {
+    if (eventIdToDelete) {
+      fetch(`http://127.0.0.1:8000/api/events/${eventIdToDelete}/`, {
+        method: 'DELETE',
+      })
         .then((response) => {
           if (response.ok) {
-            window.location.reload(); // Reload the page after successful deletion
+            window.location.reload();
           } else {
             console.error('Failed to delete event');
           }
         })
-        .catch((error) => console.error('Error deleting event:', error));
-    } 
+        .catch((error) => console.error('Error deleting event:', error))
+        .finally(() => {
+          handleCloseDeleteDialog();
+        });
+    }
   };
+  
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -782,63 +800,151 @@ const renderTable = (title, status) => {
   if (filteredRequests.length === 0) {
     return null;
   }
-
+  let statusColor = '#999999'; // Default color
+  if (status === 'อนุมัติ') statusColor = '#2EBDBD';
+  else if (status === 'รออนุมัติ') statusColor = '#FFCC33';
+  else if (status === 'ไม่อนุมัติ') statusColor = '#CC0000';
   return (
-    <Box p={3}>
-      <Typography variant="h6" mt={3}>{title}</Typography>
+<Box p={3}>
+      <Typography
+        variant="h6"
+        mt={3}
+        sx={{
+          backgroundColor: statusColor,
+          color: 'white',
+          borderRadius: '16px', // ทำให้กรอบมีขอบโค้ง
+          padding: '8px 16px', // เพิ่มช่องว่างด้านในเพื่อให้ข้อความดูดีขึ้น
+          display: 'inline-block', // ทำให้ขนาดพอดีกับข้อความ
+          width: '10%',
+          marginBottom: '16px', // เพิ่มระยะห่างด้านล่างจากตาราง
+          textAlign: 'center',
+        }}
+      >
+        {title}
+      </Typography>
       <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ชื่อกิจกรรม</TableCell>
-              <TableCell>ประเภท</TableCell>
-              <TableCell>วันจัดกิจกรรม</TableCell>
-              <TableCell>จำนวนคนลงทะเบียน</TableCell>
-              <TableCell> * </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRequests.map((request) => {
-              const registrationCount = countRegistrationsForEvent(request.event.event_id);
-              return (
-                <TableRow key={request.request_id}>
-                  <TableCell>{request.event.event_name}</TableCell>
-                  <TableCell>{request.event.type}</TableCell>
-                  <TableCell>{`${request.event.startdate} - ${request.event.enddate}`}</TableCell>
-                  <TableCell>
-                    {registrationCount}/{request.event.amount}
-                    {status === 'อนุมัติ' && (
-                      <span
-                        onClick={() => listRegister(request.event.event_id)}
-                        style={{ color: 'blue', textDecoration: 'none', cursor: 'pointer', marginLeft: '8px' }}
-                      >
-                        รายชื่อ
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Description
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => handleOpenDetailDialog(request.event.event_id)}
-                    />
-                    {status !== 'ไม่อนุมัติ' && (
-                      <Edit
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleOpenEditForm(request.event, request)}
-                      />
-                    )}
-                    <Delete
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => deleteEventById(request.event.event_id)}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell
+          align="center"
+          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+        >
+          ชื่อกิจกรรม
+        </TableCell>
+        <TableCell
+          align="center"
+          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+        >
+          ประเภท
+        </TableCell>
+        <TableCell
+          align="center"
+          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+        >
+          วันจัดกิจกรรม
+        </TableCell>
+        <TableCell
+          align="center"
+          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+        >
+          จำนวนคนลงทะเบียน
+        </TableCell>
+        <TableCell
+          align="center"
+          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+        >
+          *
+        </TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {filteredRequests.map((request) => {
+        const registrationCount = countRegistrationsForEvent(request.event.event_id);
+        return (
+          <TableRow key={request.request_id}>
+            <TableCell align="center" sx={{ width: '20%' }}>
+              {request.event.event_name}
+            </TableCell>
+            <TableCell align="center" sx={{ width: '20%' }}>
+              {request.event.type}
+            </TableCell>
+            <TableCell align="center" sx={{ width: '20%' }}>
+              {`${request.event.startdate} - ${request.event.enddate}`}
+            </TableCell>
+            <TableCell align="center" sx={{ width: '20%' }}>
+              {registrationCount}/{request.event.amount}
+              {status === 'อนุมัติ' && (
+                <span
+                  onClick={() => listRegister(request.event.event_id)}
+                  style={{ color: 'blue', textDecoration: 'none', cursor: 'pointer', marginLeft: '8px' }}
+                >
+                  รายชื่อ
+                </span>
+              )}
+            </TableCell>
+            <TableCell align="center" sx={{ width: '20%' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: 1,
+                }}
+              >
+                <IconButton
+                  sx={{
+                    backgroundColor: '#E0E0E0',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    '&:hover': {
+                      backgroundColor: '#D3D3D3',
+                    },
+                  }}
+                  onClick={() => handleOpenDetailDialog(request.event.event_id)}
+                >
+                  <DescriptionIcon sx={{ color: 'blue' }} />
+                </IconButton>
+
+                {status !== 'ไม่อนุมัติ' && (
+                  <IconButton
+                    sx={{
+                      backgroundColor: '#E0E0E0',
+                      borderRadius: '8px',
+                      padding: '8px',
+                      '&:hover': {
+                        backgroundColor: '#D3D3D3',
+                      },
+                    }}
+                    onClick={() => handleOpenEditForm(request.event, request)}
+                  >
+                    <EditIcon sx={{ color: 'orange' }} />
+                  </IconButton>
+                )}
+
+                <IconButton
+                  sx={{
+                    backgroundColor: '#E0E0E0',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    '&:hover': {
+                      backgroundColor: '#D3D3D3',
+                    },
+                  }}
+                  onClick={() => handleOpenDeleteDialog(request.event.event_id)}
+                >
+                  <DeleteIcon sx={{ color: 'red' }} />
+                </IconButton>
+              </Box>
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+</TableContainer>
+
     </Box>
+    
   );
 };
 
@@ -865,8 +971,8 @@ return (
           {UserData ? (
             <>
               <Typography variant="body1">ชื่อ: {UserData.name}</Typography>
-              <Typography variant="body1">Tel: {UserData.tel}</Typography>
-              <Typography variant="body1">Email: {UserData.email}</Typography>
+              <Typography variant="body1">เบอร์โทร: {UserData.tel}</Typography>
+              <Typography variant="body1">อีเมล: {UserData.email}</Typography>
               <Typography variant="body1"> {UserData.user_image}</Typography>
             </>
           ) : (
@@ -875,30 +981,85 @@ return (
         </Grid>
       </Grid>
     </Box>
-    <Box
-  sx={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: 2, // เพิ่มช่องว่างระหว่าง TextField และ Button
-    marginY: 2, // เพิ่มระยะห่างบน-ล่าง
-  }}
->
-  <TextField
-    label="ค้นหากิจกรรม"
-    variant="outlined"
-    value={searchTerm}
-    onChange={handleSearchChange}
-    sx={{ flex: 1 }} // ใช้ flex เพื่อให้ TextField ขยายได้เต็มที่
-  />
-  <Button
-    variant="contained"
-    color="primary"
-    onClick={handleOpenForm}
-    startIcon={<AddIcon />}
-  >
-    เพิ่มกิจกรรม
-  </Button>
-</Box>
+          <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2, // เพิ่มช่องว่างระหว่าง TextField และ Button
+          marginY: 2, // เพิ่มระยะห่างบน-ล่าง
+        }}
+      >
+        <TextField
+          label="ค้นหากิจกรรม"
+          variant="outlined"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          sx={{ flex: 1 }} // ใช้ flex เพื่อให้ TextField ขยายได้เต็มที่
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleOpenForm}
+          startIcon={<AddIcon />}
+        >
+          เพิ่มกิจกรรม
+        </Button>
+      </Box>
+      {/* Form for Delete Event */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCloseDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+        maxWidth="xs" // ขนาดเล็กกว่าปกติเพื่อให้เหมือนตัวอย่าง
+        fullWidth
+        sx={{ 
+          '& .MuiDialog-paper': { 
+            width: '500px', 
+            height: '300px', 
+            maxWidth: 'none', 
+            borderRadius: '16px' // ปรับขอบให้มนขึ้น
+          } 
+        }}
+      >
+        <DialogContent>
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            textAlign="center"
+            height="100%"
+          >
+            <WarningIcon sx={{ color: 'orange', fontSize: 60, marginBottom: 2 }} />
+            <Typography variant="h6" sx={{ marginBottom: 1 }}>
+              ลบกิจกรรม ?
+            </Typography>
+            <Typography variant="body2" sx={{ marginBottom: 3 }}>
+              คุนแน่ใจใช่ไหมว่าต้องการลบกิจกรรม
+            </Typography>
+            <Box display="flex" gap={2}>
+              <Button 
+                onClick={confirmDeleteEvent} 
+                color="primary" 
+                variant="contained"
+                sx={{ paddingX: 3 }}
+              >
+            ยืนยัน
+              </Button>
+              <Button 
+                onClick={handleCloseDeleteDialog} 
+                color="error" 
+                variant="outlined"
+                sx={{ paddingX: 3 }}
+              >
+                ยกเลิก
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Form for Adding Event */}
     <Dialog open={open} onClose={handleCloseForm} maxWidth="md" fullWidth>
@@ -1090,39 +1251,70 @@ return (
       </DialogContent>
     </Dialog>
     {/* Dialog for showing event details */}
-<Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="lg" fullWidth>
-        <DialogTitle>
-          {selectedEvent?.event_name}
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDetailDialog}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box>
-            {selectedEvent?.event_img && ( <img src={selectedEvent.event_img}  alt={selectedEvent.event_name} style={{ width: '20%', marginTop: '10px', borderRadius: '8px' }} />)}
-            <Typography variant="body1"><strong>ประเภท:</strong> {selectedEvent?.type}</Typography>
-            <Typography variant="body1"><strong>สถานที่:</strong> {selectedEvent?.address}</Typography>
-            <Typography variant="body1"><strong>จังหวัด:</strong> {selectedEvent?.province}</Typography>
-            <Typography variant="body1"><strong>รายละเอียด:</strong> {selectedEvent?.detail}</Typography>
-            <Typography variant="body1"><strong>จำนวนที่รับ:</strong> {selectedEvent?.amount}</Typography>
-            <Typography variant="body1"><strong>วันที่เริ่มกิจกรรม:</strong> {selectedEvent?.startdate} </Typography>
-            <Typography variant="body1"><strong>วันที่สิ้นสุดกิจกรรม:</strong> {selectedEvent?.enddate}</Typography>
-            <Typography variant="body1"><strong>เวลา:</strong> {selectedEvent?.timestart}</Typography>
-          </Box>
-        </DialogContent>
-      </Dialog>
+    <Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="lg" fullWidth
+    sx={{
+    '& .MuiDialog-paper': {
+      width: '50%', // Adjusts the dialog width, you can set this to a desired percentage or value like '600px'
+      maxWidth: 'none', // This ensures the custom width is applied
+    },
+  }}>
+  <DialogTitle>
+  <Typography variant="h10" fontWeight="bold">
+      รายละเอียดกิจกรรม
+    </Typography>
+    <IconButton
+      aria-label="close"
+      onClick={handleCloseDetailDialog}
+      sx={{
+        position: 'absolute',
+        right: 8,
+        top: 8,
+        color: (theme) => theme.palette.grey[500],
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+  </DialogTitle>
+  <DialogContent>
+    <Box>
+    <Typography variant="body1" >
+      <strong>ชื่อกิจกรรม:</strong>{selectedEvent?.event_name}
+      </Typography>
+      <Typography variant="body1">
+        <strong>ประเภท:</strong> {selectedEvent?.type}
+      </Typography>
+      <Typography variant="body1">
+        <strong>สถานที่:</strong> {selectedEvent?.address}
+      </Typography>
+      {selectedEvent?.event_img && (
+        <img
+          src={selectedEvent.event_img}
+          alt={selectedEvent.event_name}
+          style={{ width: '20%', marginTop: '10px', borderRadius: '8px' }}
+        />
+      )}
+      <Typography variant="body1">
+        <strong>รายละเอียด:</strong> {selectedEvent?.detail}
+      </Typography>
+      <Typography variant="body1">
+        <strong>จำนวนที่รับ:</strong> {selectedEvent?.amount}
+      </Typography>
+      <Typography variant="body1">
+        <strong>วันที่เริ่มกิจกรรม:</strong> {selectedEvent?.startdate}
+      </Typography>
+      <Typography variant="body1">
+        <strong>วันที่สิ้นสุดกิจกรรม:</strong> {selectedEvent?.enddate}
+      </Typography>
+      <Typography variant="body1">
+        <strong>เวลา:</strong> {selectedEvent?.timestart}
+      </Typography>
+    </Box>
+  </DialogContent>
+</Dialog>
+
     
 
-        {renderTable('อนุมัติแล้ว', 'อนุมัติ')}
+        {renderTable('อนุมัติ', 'อนุมัติ')}
         {renderTable('รออนุมัติ', 'รออนุมัติ')}
         {renderTable('ไม่อนุมัติ', 'ไม่อนุมัติ')}
         {renderEditForm()}
