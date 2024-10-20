@@ -11,27 +11,23 @@ const LoginPage = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('Attempting login with:', { username, password }); // Debug log
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login/user', {
         username,
         password,
       });
-      console.log(response.data);
+  
+      console.log('Response data:', response.data); // Log the full response
+  
       if (response.status === 200) {
-        // Save token and authentication status
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('isAuthenticated', 'true'); // Uncomment this if needed
-        localStorage.setItem('username', username);
-        
-        // Assuming your response contains user_id inside `user`
-        const userId = response.data.user.user_id; // ดึงค่า user_id จาก `user` object
-        console.log('User logged in:', username);
-        console.log('userid:', userId);
-        
-        onLogin(userId);  // Pass userId to the login handler
-        navigate('/home');  // Redirect to the home page
+        // Handle success
+        const userId = response.data.user.user_id; 
+        onLogin(userId);
+        navigate('/home');
       }
     } catch (error) {
+      console.error('Login error:', error.response ? error.response.data : error.message); // Enhanced error logging
       if (error.response && error.response.data) {
         setError(error.response.data.error);
       } else {
@@ -92,7 +88,6 @@ const LoginPage = ({ onLogin }) => {
             
           
           />
-
 
           <Button variant="contained" color="primary" fullWidth onClick={handleLogin} sx={{ marginTop: 2, background:"#475443"}}>
             Login

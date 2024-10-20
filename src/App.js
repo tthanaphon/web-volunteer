@@ -5,6 +5,8 @@ import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
 import Myactivity from './Front-end/Myactivity';
 import ListRegis from './Front-end/ListRegisterpage';
+import Myactivity from './Front-end/Myactivity';
+import ListRegis from './Front-end/ListRegisterpage';
 import SignUpPage from './Front-end/SignUp';
 import Detailpage from './Components/Detailpage';
 import RegistrationForm from './Components/Register';
@@ -19,10 +21,13 @@ function App() {
   const location = useLocation();
   
 
+  
+
 
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     const storedUserId = localStorage.getItem('userID');
+  
   
     if (authStatus === 'true') {
       setIsAuthenticated(true);
@@ -43,7 +48,8 @@ function App() {
     setIsAuthenticated(false); // Update state
     setUserId(null); // Clear user ID from state
   };
-
+  console.log('isAuthenticated:', isAuthenticated);
+  console.log('userId:', userId);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

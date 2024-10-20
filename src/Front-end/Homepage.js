@@ -45,10 +45,11 @@ const HomePage = () => {
   const [registrations, setRegistrations] = useState([]); //เก็บข้อมูลลงทะเบียน
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState(''); // จัดเก็บค่าการค้นหา
-  
-  
+
+
+  const userId= localStorage.getItem('userID');
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userID');
+
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -72,6 +73,7 @@ const HomePage = () => {
     fetchEvents();
     fetchRegistrations();
   }, []);
+
 
 
   const countRegistrationsForEvent = (eventID) => {
@@ -250,6 +252,13 @@ const HomePage = () => {
               <Box key={index}>
                 <Card key={index}  sx={{ border: '2px solid green', borderRadius: '16px' }}>
                   <CardContent>
+                  {event.event_img && (  // ตรวจสอบว่ามี URL ของรูปภาพ
+                     <img 
+                       src={event.event_img} 
+                       alt={event.event_name} 
+                      style={{ width: '100%', height: 'auto', borderRadius: '16px' }} // ทำให้รูปภาพมีขนาดพอดีกับ Card
+                    />
+          )}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                     <Box sx={{bgcolor: '#ffdef2'}}><Typography variant="subtitle2" >Post: {formatDate(event.date_create)}</Typography></Box>
                     <Box 
@@ -263,8 +272,8 @@ const HomePage = () => {
                     <PeopleAltIcon sx={{ marginRight: '8px', color: '#1976d2' }} />
                     <Typography> {countRegistrationsForEvent(event.event_id)}/{event.amount}</Typography>
                     </Box>
-                    </Box>
-                    
+                    </Box>                  
+                   
                     <Typography variant="subtitle1">{event.event_name}</Typography>
                     <Typography variant="subtitle1">ผู้จัด: {event.user.name}</Typography>
                     <Typography variant="subtitle2">สถานที่: {event.address}</Typography>
