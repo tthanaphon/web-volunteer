@@ -5,8 +5,6 @@ import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
 import Myactivity from './Front-end/Myactivity';
 import ListRegis from './Front-end/ListRegisterpage';
-import Myactivity from './Front-end/Myactivity';
-import ListRegis from './Front-end/ListRegisterpage';
 import SignUpPage from './Front-end/SignUp';
 import Detailpage from './Components/Detailpage';
 import RegistrationForm from './Components/Register';

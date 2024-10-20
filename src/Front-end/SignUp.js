@@ -27,25 +27,33 @@ const SignUpPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const formDataToSend = new FormData(); // Create a FormData object
+  
+    const formDataToSend = new FormData();
     for (const key in formData) {
-      formDataToSend.append(key, formData[key]); // Append each form field to the FormData object
+      if (key !== 'user_img') {
+        formDataToSend.append(key, formData[key]); // Append other form fields.
+      }
     }
-
+  
+    // Only append 'user_img' if it is not 'null' and is defined (meaning a file was selected)
+    if (formData.user_img !== 'null' && formData.user_img) {
+      formDataToSend.append('user_img', formData.user_img);
+    }
+  
     try {
       await axios.post('http://127.0.0.1:8000/api/users/', formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data', 
+          'Content-Type': 'multipart/form-data',
         },
       });
       alert('Registration successful');
-      navigate('/login'); // Redirect to login page after successful sign-up
+      navigate('/login'); // Redirect to the login page after successful sign-up
     } catch (error) {
-      console.error('Error during sign-up:', error);
+      console.error('Error during sign-up:', error.response?.data || error);
       alert('Error during sign-up: ' + (error.response?.data?.error || 'Unknown error'));
     }
   };
+  
 
   // Redirect to login page
   const handleSignUpRedirect = () => {
