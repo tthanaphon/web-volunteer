@@ -91,12 +91,12 @@ const ListRegis = () => {
     <Box sx={{ display: 'flex', padding: 2 }}>
       <Sidebar />
             <Box sx={{ flex: 1, marginLeft: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
-        <IconButton onClick={handleBack} sx={{ marginRight: 1 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5">รายชื่อคนลงทะเบียน</Typography>
-      </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, marginTop: 4 }}>
+          <IconButton onClick={handleBack} sx={{ marginRight: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5">รายชื่อคนลงทะเบียน</Typography>
+        </Box>
         <Box sx={{ marginY: 2 }}>
           <TextField
             fullWidth
@@ -116,18 +116,18 @@ const ListRegis = () => {
             {console.log('Rendering table...')}
             <TableContainer component={Paper}>
               <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>ชื่อ</TableCell>
-                    <TableCell>นามสกุล</TableCell>
-                    <TableCell>ชื่อเล่น</TableCell>
-                    <TableCell>เพศ</TableCell>
-                    <TableCell>วันเกิด</TableCell>
-                    <TableCell>ศาสนา</TableCell>
-                    <TableCell>โรคประจำตัว</TableCell>
-                    <TableCell>เบอร์โทร</TableCell>
-                  </TableRow>
-                </TableHead>
+              <TableHead>
+              <TableRow>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>ชื่อ</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>นามสกุล</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>ชื่อเล่น</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>เพศ</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>วันเกิด</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>ศาสนา</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>โรคประจำตัว</TableCell>
+                <TableCell sx={{ backgroundColor: 'gray', color: 'white' }}>เบอร์โทร</TableCell>
+              </TableRow>
+            </TableHead>
                 <TableBody>
                   {displayedRegisters.length > 0 ? (
                     displayedRegisters.map((reg) => (
