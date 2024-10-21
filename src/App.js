@@ -17,9 +17,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState(null);
   const location = useLocation();
-  
-
-  
 
 
   useEffect(() => {
@@ -38,6 +35,7 @@ function App() {
     setUserId(userId);
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userID', userId);
+    
   };
 
   const handleLogout = () => {
@@ -46,8 +44,7 @@ function App() {
     setIsAuthenticated(false); // Update state
     setUserId(null); // Clear user ID from state
   };
-  console.log('isAuthenticated:', isAuthenticated);
-  console.log('userId:', userId);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

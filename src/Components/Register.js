@@ -147,7 +147,7 @@ const RegistrationForm = ({ userId }) => {
                   ))}
                 </Select>
               </FormControl>
-              <TextField label="เบอร์โทร" name="register_tel" value={formData.register_tel} onChange={handleChange} fullWidth required />
+              <TextField label="เบอร์โทร" name="register_tel"  inputProps={{ maxLength: 10 }} value={formData.register_tel} onChange={handleChange} fullWidth required />
             </Box>
 
             <TextField label="โรคประจำตัว" name="register_disease" value={formData.register_disease} onChange={handleChange} fullWidth />

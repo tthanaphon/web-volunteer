@@ -83,7 +83,8 @@ const HomePage = () => {
 
   const isJoin = (eventID) => {
     return registrations.some(
-      (registration) => registration.event === eventID &&  String(registration.user) === String(userId)
+      (registration) => registration.event === eventID &&  String(registration.user) === String(userId) &&
+       registration.status === 'active'
     );
   }
 
@@ -247,18 +248,26 @@ const HomePage = () => {
         {filteredEventsList.length === 0 ? (
           <Typography variant="subtitle1" color="textSecondary">ไม่มีกิจกรรม</Typography>
         ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2}}>
             {filteredEventsList.map((event, index) => (
-              <Box key={index}>
-                <Card key={index}  sx={{ border: '2px solid green', borderRadius: '16px' }}>
+              <Box key={index} sx={{width: '400px'}} >
+                <Card key={index}  sx={{ 
+                  width: '400px', // กำหนดความกว้างคงที่
+                  height: '500px', // กำหนดความสูงคงที่
+                  border: '2px solid green', 
+                  borderRadius: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
                   <CardContent>
                   {event.event_img && (  // ตรวจสอบว่ามี URL ของรูปภาพ
                      <img 
                        src={event.event_img} 
                        alt={event.event_name} 
-                      style={{ width: '100%', height: 'auto', borderRadius: '16px' }} // ทำให้รูปภาพมีขนาดพอดีกับ Card
+                      style={{ width: '100%', height: '200px', borderRadius: '16px',objectFit: 'cover', }} // ทำให้รูปภาพมีขนาดพอดีกับ Card
                     />
-          )}
+                   )}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                     <Box sx={{bgcolor: '#ffdef2'}}><Typography variant="subtitle2" >Post: {formatDate(event.date_create)}</Typography></Box>
                     <Box 
