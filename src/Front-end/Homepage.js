@@ -140,7 +140,7 @@ const HomePage = () => {
     const matchesActivity = selectedActivity === 'ทั้งหมด' || event.type === selectedActivity;
     const matchesProvince = !province || event.province === province;
     const matchesTypeDate = typedateActivity === 'ทั้งหมด' || typedate === typedateActivity;
-    const matchesSearchTerm = event.event_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearchTerm = event.event_name.toLowerCase().includes(searchTerm.toLowerCase())||event.detail.toLowerCase().includes(searchTerm.toLowerCase());
     const hasApprovedRequests = requests[event.event_id] && requests[event.event_id].length > 0;
    
     

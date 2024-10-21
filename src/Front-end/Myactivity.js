@@ -585,41 +585,6 @@ const Myactivity = () => {
       });
   };
   
-  // useEffect(() => {
-  //   if (userId) {
-  //     console.log('Current userId:', userId);
-  
-      // Fetch requests from the API
-  //     fetch('http://127.0.0.1:8000/api/requests/')
-  //       .then((response) => {
-  //         if (!response.ok) {
-  //           throw new Error('Failed to fetch requests: ' + response.statusText);
-  //         }
-  //         return response.json();
-  //       })
-  //       .then((data) => {
-  //         // Filter requests based on `userId`
-  //         const filteredRequests = data.filter((request) => {
-  //           // Check if event is an object and contains user information
-  //           if (typeof request.event === 'object' && request.event.user) {
-  //             return request.event.user === parseInt(userId);
-  //           }
-  //           return false;
-  //         });
-  
-  //         // Set filtered requests or log if no matches are found
-  //         if (filteredRequests.length > 0) {
-  //           console.log('Filtered requests:', filteredRequests);
-  //           setRequests(filteredRequests);
-  //         } else {
-  //           console.log('No matching requests for the current user.');
-  //         }
-  //       })
-  //       .catch((error) => console.error('Error fetching requests:', error));
-  //   } else {
-  //     console.log('User ID is not available.');
-  //   }
-  // }, [userId]);
   
   useEffect(() => {
     const fetchRequestsAndEvents = async () => {

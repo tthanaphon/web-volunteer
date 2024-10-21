@@ -23,17 +23,20 @@ function App() {
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     const storedUserId = localStorage.getItem('userID');
-  
+
     if (authStatus === 'true' && storedUserId) {
       setIsAuthenticated(true);
       setUserId(storedUserId);
     } else {
       setIsAuthenticated(false);
-      navigate('/login'); // Redirect to login if not authenticated
+      // Only navigate to login if not in the signup page
+      if (location.pathname !== '/signup') {
+        navigate('/login');
+      }
     }
 
     setIsLoading(false); // Set isLoading to false after checking login status
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLogin = (userId) => {
     setIsAuthenticated(true);
@@ -71,7 +74,7 @@ function App() {
             />
             <Route 
               path="/signup" 
-              element={<SignUpPage />} 
+              element={isAuthenticated ? <Navigate to="/home" /> : <SignUpPage />} 
             />
             <Route 
               path="/activity-owner" 
