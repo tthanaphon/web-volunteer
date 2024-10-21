@@ -11,10 +11,11 @@ dayjs.locale('th'); // ตั้งค่า locale เป็นภาษาไ�
 
 const Detailpage = () => {
     const location = useLocation();
-    const { event,currentCount  } = location.state || {};
+    const { event,currentCount ,user } = location.state || {};
     const navigate = useNavigate();
     const [registrations ,setRegistrations] =  useState([])
     const userId = localStorage.getItem('userID');
+    
 
     useEffect(() => {
         const fetchRegistrations = async () => {
@@ -70,14 +71,14 @@ const Detailpage = () => {
                     </Button>
                 </Box>
                 {event.event_img && (  // ตรวจสอบว่ามี URL ของรูปภาพ
-              <img 
-                src={event.event_img} 
-                alt={event.event_name} 
-               style={{ width: '100%', borderRadius: '16px' ,width:'500px' ,height:'30%'}} // ทำให้รูปภาพมีขนาดพอดีกับ Card
-             />
+                  <img 
+                    src={event.event_img} 
+                    alt={event.event_name} 
+                    style={{ width: '100%', height: '300px', borderRadius: '16px',objectFit: 'cover', width:'600px' }} 
+                  />
                 )}
                 <Typography variant="subtitle1" sx={{fontWeight:'bold' , fontSize:'20px'}}>{event.event_name}</Typography>
-                <Typography variant="subtitle1" >ผู้จัด: {event.user.name}</Typography>
+                <Typography variant="subtitle1" >ผู้จัด: {user.name}</Typography>
                 <Typography variant="subtitle2">หมวดหมู่: {event.type}</Typography>
                 <Typography variant="subtitle2">สถานที่: {event.address} จังหวัด: {event.province}</Typography>
                
@@ -93,8 +94,8 @@ const Detailpage = () => {
                 </Box>
                 <Box sx={{ mt: 1 }}> {/* เพิ่มระยะห่างระหว่างส่วน */}
                     <Typography variant="subtitle2">ช่องทางติดต่อ:</Typography>
-                    <Typography variant="subtitle2">Tel: {event.user.tel}</Typography>
-                    <Typography variant="subtitle2">Email: {event.user.email}</Typography>
+                    <Typography variant="subtitle2">Tel: {user.tel}</Typography>
+                    <Typography variant="subtitle2">Email: {user.email}</Typography>
                 </Box>
             </CardContent>
 
@@ -102,7 +103,7 @@ const Detailpage = () => {
             <CardActions  sx={{ justifyContent: 'flex-start' }}>
                 <Button type="submit" variant="contained" color="primary" 
                 sx={{ backgroundColor: currentCount >= event.amount ? '#ccc' : '#032b03' }} // ปรับสีปุ่มถ้าเต็ม
-                disabled={isJoin(event.event_id)|| currentCount >= event.amount || dayjs().isAfter(dayjs(event.startdate))} // ปิดการกดถ้าเต็ม
+                disabled={isJoin(event.event_id)|| currentCount >= event.amount || dayjs().isAfter(dayjs(event.startdate)) ||  String(userId) === String(event.user)} // ปิดการกดถ้าเต็ม
                 onClick={() => handleRegister(event.event_id, event.event_name)}
                 >
                      {isJoin(event.event_id)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, useLocation, Navigate } from 'react-router-dom'; 
+import { Route, Routes, useLocation, Navigate, useNavigate } from 'react-router-dom'; 
 import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
@@ -17,58 +17,44 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     const storedUserId = localStorage.getItem('userID');
   
-  
-    if (authStatus === 'true') {
+    if (authStatus === 'true' && storedUserId) {
       setIsAuthenticated(true);
       setUserId(storedUserId);
+    } else {
+      setIsAuthenticated(false);
+      navigate('/login'); // Redirect to login if not authenticated
     }
-  }, []);
+
+    setIsLoading(false); // Set isLoading to false after checking login status
+  }, [navigate]);
 
   const handleLogin = (userId) => {
     setIsAuthenticated(true);
     setUserId(userId);
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userID', userId);
-    
+    navigate('/home'); // Redirect to the home page after login
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated'); // Remove authentication status
-    localStorage.removeItem('userID'); // Remove user ID
-    setIsAuthenticated(false); // Update state
-    setUserId(null); // Clear user ID from state
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userID');
+    setIsAuthenticated(false);
+    setUserId(null);
+    navigate('/login'); // Redirect to login page after logout
   };
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    console.log('Stored userId:', storedUserId);
-    console.log('isAuthenticated before:', isAuthenticated);
-
-    if (storedUserId) {
-      setUserId(storedUserId);
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-      Navigate('/login'); // เปลี่ยนเส้นทางไปหน้า login ถ้าไม่มี userId
-    }
-
-    setIsLoading(false); // ตั้งค่า isLoading เป็น false หลังจากตรวจสอบเสร็จสิ้น
-  }, [Navigate]);
-  useEffect(() => {
-    console.log('isAuthenticated updated to:', isAuthenticated);
-    if (isAuthenticated && !isLoading) {
-      console.log('Staying on current page due to authentication');
-    }
-  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // แสดงข้อความ Loading ขณะที่กำลังตรวจสอบการล็อกอิน
+    return <div>Loading...</div>; // Display loading message while checking authentication
   }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -76,20 +62,20 @@ function App() {
         {location.pathname !== '/login' && location.pathname !== '/signup' && isAuthenticated && (
           <button onClick={handleLogout}>Logout</button>
         )}
-        <Box className='Content' sx={{ marginTop: '20px' }}> {/* Adjust margin for Navbar height */}
+        <Box className='Content' sx={{ marginTop: '20px' }}>
           {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup' && <Navbar onLogout={handleLogout} />}
           <Routes>
             <Route 
               path="/login" 
-              element={<LoginPage onLogin={handleLogin} />} 
+              element={isAuthenticated ? <Navigate to="/home" /> : <LoginPage onLogin={handleLogin} />} 
             />
             <Route 
               path="/signup" 
-              element={<SignUpPage />}  // Route for Sign Up page
+              element={<SignUpPage />} 
             />
             <Route 
-            path="/activity-owner" 
-            element={isAuthenticated ? <Myactivity  userId={userId} /> : <Navigate to="/login" />}
+              path="/activity-owner" 
+              element={isAuthenticated ? <Myactivity userId={userId} /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/home" 
@@ -107,11 +93,10 @@ function App() {
               path="/activity-attend" 
               element={isAuthenticated ? <JoinEvent userId={userId} /> : <Navigate to="/login" />} 
             /> 
-             <Route 
-            path="/listregister" 
-            element={isAuthenticated ? <ListRegis userId={userId}/> : <Navigate to="/login" />} 
-            
-          />
+            <Route 
+              path="/listregister" 
+              element={isAuthenticated ? <ListRegis userId={userId} /> : <Navigate to="/login" />} 
+            />
             <Route 
               path="*" 
               element={<Navigate to="/login" />} 

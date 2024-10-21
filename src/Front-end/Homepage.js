@@ -45,19 +45,50 @@ const HomePage = () => {
   const [registrations, setRegistrations] = useState([]); //เก็บข้อมูลลงทะเบียน
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState(''); // จัดเก็บค่าการค้นหา
+  const [users, setUsers] = useState({});
+  const [requests,setRequests] = useState({}) ;
 
 
   const userId= localStorage.getItem('userID');
   const navigate = useNavigate();
 
+ console.log('reqest:',requests)
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const eventResponse = await axios.get('http://127.0.0.1:8000/api/events/');
-        setEvents(eventResponse.data);
+        const eventList = eventResponse.data;
+        console.log('Events:', eventList);
+        setEvents(eventList);
+
+        // เรียก API สำหรับผู้ใช้แต่ละคน
+        const userPromises = eventList.map((event) => 
+          axios.get(`http://127.0.0.1:8000/api/users/${event.user}/`)
+        );
+
+        const userResponses = await Promise.all(userPromises);
+
+        // สร้าง object ที่เก็บข้อมูลผู้ใช้ โดยใช้ user_id เป็น key
+        const userMap = {};
+        userResponses.forEach((response, index) => {
+          userMap[eventList[index].user] = response.data;
+        });
+        console.log('Users:', userMap);
+        setUsers(userMap);
+        const requestResponse = await axios.get('http://127.0.0.1:8000/api/requests/');
+        const allRequests = requestResponse.data;
+  
+        // สร้าง object ที่เก็บข้อมูล status ของการขอ
+        const requestMap = {};
+        eventList.forEach((event) => {
+          const approvedRequests = allRequests.filter(request => request.event === event.event_id && request.status === 'อนุมัติ'); // Filter for approved requests
+          requestMap[event.event_id] = approvedRequests;
+        });
+        
+        setRequests(requestMap); // setRequests เพื่อเก็บข้อมูล
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching events or users:', error);
       }
     };
 
@@ -69,11 +100,9 @@ const HomePage = () => {
         console.error('Error fetching registrations:', error);
       }
     };
-
     fetchEvents();
     fetchRegistrations();
   }, []);
-
 
 
   const countRegistrationsForEvent = (eventID) => {
@@ -112,15 +141,18 @@ const HomePage = () => {
     const matchesProvince = !province || event.province === province;
     const matchesTypeDate = typedateActivity === 'ทั้งหมด' || typedate === typedateActivity;
     const matchesSearchTerm = event.event_name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesActivity && matchesProvince && matchesTypeDate &&matchesSearchTerm;
+    const hasApprovedRequests = requests[event.event_id] && requests[event.event_id].length > 0;
+   
+    
+    return matchesActivity && matchesProvince && matchesTypeDate &&matchesSearchTerm && hasApprovedRequests ;
   });
+  console.log('Filtered Events List:', filteredEventsList);
 
   const handleDetailsClick = (event) => {
     const currentCount = countRegistrationsForEvent(event.event_id); // คำนวณจำนวนการลงทะเบียน
-    navigate('/event-detail', { state: { event, currentCount } }); 
+    navigate('/event-detail', { state: { event, currentCount, user: users[event.user] } });
   };
-
+  
   const handleRegister = (eventID,event_name) => {
     console.log('id:',eventID)
     navigate('/event-register',{state:{eventID,event_name}});
@@ -153,7 +185,7 @@ const HomePage = () => {
             }}
           >
             <MenuItem value="">
-              <em>ทั้งหมด</em>
+              <p>ทั้งหมด</p>
             </MenuItem>
             {provinceChoices.map((prov, index) => (
               <MenuItem key={index} value={prov}>
@@ -284,7 +316,7 @@ const HomePage = () => {
                     </Box>                  
                    
                     <Typography variant="subtitle1">{event.event_name}</Typography>
-                    <Typography variant="subtitle1">ผู้จัด: {event.user.name}</Typography>
+                    <Typography variant="subtitle1">ผู้จัด: {users[event.user]?.name || 'Loading...'}</Typography>
                     <Typography variant="subtitle2">สถานที่: {event.address}</Typography>
                     <Typography variant="subtitle2">วันที่จัด: {formatDate(event.startdate)} - {formatDate(event.enddate)}</Typography>
                   </CardContent>
@@ -310,7 +342,13 @@ const HomePage = () => {
                         sx={{ backgroundColor: "#032b03" }}
                         color={countRegistrationsForEvent(event.event_id) >= event.amount ? 'error' : 'primary'} // เปลี่ยนสีปุ่มเป็นสีแดงถ้าจำนวนเต็ม
                         onClick={() => handleRegister(event.event_id, event.event_name)}
-                        disabled={isJoin(event.event_id)||countRegistrationsForEvent(event.event_id) >= event.amount || dayjs().isAfter(dayjs(event.startdate))} // ปิดปุ่มถ้าเต็มหรือเลยวันเริ่มกิจกรรม
+                        disabled={
+                          isJoin(event.event_id) || 
+                          countRegistrationsForEvent(event.event_id) >= event.amount || 
+                          dayjs().isAfter(dayjs(event.startdate)) ||
+                          String(userId) === String(event.user) // ตรวจสอบว่าไอดีผู้ล็อกอินตรงกับผู้สร้างหรือไม่
+                        }
+                      
                     >
                          {isJoin(event.event_id)
                           ? 'ลงทะเบียนกิจกรรมนี้แล้ว'
