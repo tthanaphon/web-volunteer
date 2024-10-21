@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation, Navigate, useNavigate } from 'react-router-dom'; 
-import { Route, Routes, useLocation, Navigate, useNavigate } from 'react-router-dom'; 
 import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import HomePage from './Front-end/Homepage';
 import LoginPage from './Front-end/LoginPage';
@@ -45,7 +44,6 @@ function App() {
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userID', userId);
     navigate('/home'); // Redirect to the home page after login
-    navigate('/home'); // Redirect to the home page after login
   };
 
   const handleLogout = () => {
@@ -55,18 +53,10 @@ function App() {
     setUserId(null);
     navigate('/login'); // Redirect to login page after logout
   };
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userID');
-    setIsAuthenticated(false);
-    setUserId(null);
-    navigate('/login'); // Redirect to login page after logout
-  };
 
   if (isLoading) {
     return <div>Loading...</div>; // Display loading message while checking authentication
-    return <div>Loading...</div>; // Display loading message while checking authentication
   }
-
 
   return (
     <ThemeProvider theme={theme}>
@@ -76,12 +66,10 @@ function App() {
           <button onClick={handleLogout}>Logout</button>
         )}
         <Box className='Content' sx={{ marginTop: '20px' }}>
-        <Box className='Content' sx={{ marginTop: '20px' }}>
           {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup' && <Navbar onLogout={handleLogout} />}
           <Routes>
             <Route 
               path="/login" 
-              element={isAuthenticated ? <Navigate to="/home" /> : <LoginPage onLogin={handleLogin} />} 
               element={isAuthenticated ? <Navigate to="/home" /> : <LoginPage onLogin={handleLogin} />} 
             />
             <Route 
@@ -89,8 +77,6 @@ function App() {
               element={isAuthenticated ? <Navigate to="/home" /> : <SignUpPage />} 
             />
             <Route 
-              path="/activity-owner" 
-              element={isAuthenticated ? <Myactivity userId={userId} /> : <Navigate to="/login" />} 
               path="/activity-owner" 
               element={isAuthenticated ? <Myactivity userId={userId} /> : <Navigate to="/login" />} 
             />
@@ -115,10 +101,6 @@ function App() {
               element={isAuthenticated ? <ListRegis userId={userId} /> : <Navigate to="/login" />} 
             />
             <Route 
-              path="/listregister" 
-              element={isAuthenticated ? <ListRegis userId={userId} /> : <Navigate to="/login" />} 
-            />
-            <Route 
               path="*" 
               element={<Navigate to="/login" />} 
             />
@@ -127,6 +109,6 @@ function App() {
       </Box>
     </ThemeProvider>
   );
-
+}
 
 export default App;
