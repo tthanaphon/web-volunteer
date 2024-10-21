@@ -104,10 +104,12 @@ const HomePage = () => {
     fetchRegistrations();
   }, []);
 
-
   const countRegistrationsForEvent = (eventID) => {
-    return registrations.filter((registration) => registration.event === eventID).length; //นับจำนวนคนลงทะเบียน
+    return registrations.filter((registration) => 
+      registration.event === eventID && registration.status === 'active'  // ตรวจสอบเฉพาะ status = 'active'
+    ).length; // นับจำนวนคนลงทะเบียนที่มี status = 'active'
   };
+  
  
 
   const isJoin = (eventID) => {

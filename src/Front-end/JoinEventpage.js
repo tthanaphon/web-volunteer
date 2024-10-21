@@ -30,7 +30,9 @@ const JoinEvent = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [activeTab, setActiveTab] = useState('ทั้งหมด');
   const [page, setPage] = useState(1);
+  const [users, setUsers] = useState({});
   const eventsPerPage = 3; // Number of events per page
+
 
   // State for confirmation dialog
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,32 +52,55 @@ const JoinEvent = () => {
 
   // Fetch events and registrations
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const eventResponse = await axios.get('http://127.0.0.1:8000/api/events/');
-        setEvents(eventResponse.data);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      // Fetch events and registrations in parallel for better performance
+      const [eventResponse, registrationResponse] = await Promise.all([
+        axios.get('http://127.0.0.1:8000/api/events/'),
+        axios.get('http://127.0.0.1:8000/api/registers/'),
+      ]);
+      
+      const eventList = eventResponse.data;
+      setEvents(eventList);
+      
+      console.log('Events:', eventList);
+      console.log('Registrations:', registrationResponse.data);
+      
+      setRegistrations(registrationResponse.data);
 
-    const fetchRegistrations = async () => {
-      try {
-        const registrationResponse = await axios.get('http://127.0.0.1:8000/api/registers/');
-        setRegistrations(registrationResponse.data);
-      } catch (error) {
-        console.error('Error fetching registrations:', error);
-      }
-    };
+      // Fetch user details for each event in parallel
+      const userPromises = eventList.map((event) =>
+        axios.get(`http://127.0.0.1:8000/api/users/${event.user}/`)
+      );
+      const userResponses = await Promise.all(userPromises);
 
-    fetchEvents();
-    fetchRegistrations();
-  }, []);
+      // Create a map of users by their ID
+      const userMap = {};
+      userResponses.forEach((response, index) => {
+        userMap[eventList[index].user] = response.data;
+      });
+      
+      console.log('Users:', userMap);
+      setUsers(userMap);
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  fetchData();
+}, []);  // You can add dependencies here if needed
+
+
+
 
   // Count registrations for a specific event
   const countRegistrationsForEvent = (eventID) => {
-    return registrations.filter((registration) => registration.event === eventID).length;
+    return registrations.filter((registration) => 
+      registration.event === eventID && registration.status === 'active'  // ตรวจสอบเฉพาะ status = 'active'
+    ).length; // นับจำนวนคนลงทะเบียนที่มี status = 'active'
   };
+  
 
   const update = () => {
     axios.get(`http://127.0.0.1:8000/api/registers/`) // Assuming a GET endpoint to fetch all appointments
@@ -139,46 +164,62 @@ const JoinEvent = () => {
   
       if (activeTab === 'ดำเนินการ') {
         // Filter events that have started but not yet ended for the current user
-        filtered = events.filter(event => {
-          const isRegistered = registrations.some(registration => 
-            String(registration.user) === String(userId) && 
-            registration.event === event.event_id && 
-            registration.status === 'active' // Ensure the registration is active
-          );
+        filtered = events
+          .filter(event => {
+            const userRegistration = registrations.find(registration => 
+              String(registration.user) === String(userId) && 
+              registration.event === event.event_id && 
+              registration.status === 'active'
+            );
   
-          return isRegistered && dayjs(event.startdate).isBefore(today) && dayjs(event.enddate).isAfter(today);
-        });
+            return userRegistration ;
+          })
+          .map(event => {
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
+          });
       } else if (activeTab === 'สิ้นสุด') {
         // Filter events that have ended for the current user
-        filtered = events.filter(event => {
-          const isRegistered = registrations.some(registration => 
-            String(registration.user) === String(userId) && 
-            registration.event === event.event_id && 
-            registration.status === 'active'
-          );
+        filtered = events
+          .filter(event => {
+            const userRegistration = registrations.find(registration => 
+              String(registration.user) === String(userId) && 
+              registration.event === event.event_id && 
+              registration.status === 'active'
+            );
   
-          return isRegistered && dayjs(event.enddate).isBefore(today);
-        });
+            return userRegistration && dayjs(event.enddate).isBefore(today);
+          })
+          .map(event => {
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
+          });
       }  else if (activeTab === 'ยกเลิก') {
-        // Filter events that have ended for the current user
-        filtered = events.filter(event => {
-          const isRegistered = registrations.some(registration => 
-            String(registration.user) === String(userId) && 
-            registration.event === event.event_id && 
+        // Filter events that have been cancelled for the current user
+        filtered = registrations
+          .filter(registration => 
+            String(registration.user) === String(userId) &&
             registration.status === 'inactive'
-          );
-          return isRegistered ;
-        });
-      }
-      else {
-       // กรองอีเวนต์ที่ผู้ใช้คนปัจจุบันลงทะเบียนแล้วและยังไม่ถูกยกเลิก
-        const userRegistrations = registrations.filter(registration =>
-          String(registration.user) === String(userId) && registration.status === 'active'
-        );
-        // ดึง event ID ที่ผู้ใช้ลงทะเบียนจากรายการ userRegistrations
-        const userEventIds = userRegistrations.map(reg => reg.event);
-        // กรองอีเวนต์ทั้งหมดเฉพาะที่มี event_id อยู่ใน userEventIds (อีเวนต์ที่ผู้ใช้ลงทะเบียนแล้ว)
-        filtered = events.filter(event => userEventIds.includes(event.event_id));
+          )
+          .map(cancelledRegistration => {
+            const event = events.find(event => event.event_id === cancelledRegistration.event);
+            return { ...event, register_id: cancelledRegistration.register_id };
+          });
+      } else {
+        // Filter events where the current user is actively registered
+        filtered = events
+          .filter(event => {
+            const userRegistration = registrations.find(registration => 
+              String(registration.user) === String(userId) && 
+              registration.event === event.event_id && 
+              registration.status === 'active'
+            );
+            return userRegistration;
+          })
+          .map(event => {
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
+          });
       }
   
       setFilteredEvents(filtered);
@@ -194,9 +235,14 @@ const JoinEvent = () => {
 
   // Handle navigation to event detail
   const handleDetailsClick = (event) => {
-    const currentCount = countRegistrationsForEvent(event.event_id);
-    navigate('/event-detail', { state: { event, currentCount } });
+    if (event && users[event.user]) {
+      const currentCount = countRegistrationsForEvent(event.event_id); // คำนวณจำนวนการลงทะเบียน
+      navigate('/event-detail', { state: { event, currentCount, user: users[event.user] } });
+    } else {
+      console.error('Event or user data is missing');
+    }
   };
+  
 
   return (
     <Box sx={{ display: 'flex', padding: 2 }}>
@@ -220,13 +266,13 @@ const JoinEvent = () => {
         ) : (
           <Box sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' },
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
             gap: 3
           }}>
             {currentEvents.map((event, index) => {
               const registrationsForEvent = registrations.filter(reg => reg.event === event.event_id);
               return (
-                <Card key={index} sx={{ border: '2px solid green',  height: '500px',borderRadius: '16px' , display: 'flex'  ,width: '400px', // กำหนดความกว้างคงที่
+                <Card key={index} sx={{ border: '2px solid green',  height: '530px',borderRadius: '16px' , display: 'flex'  ,width: '400px', // กำหนดความกว้างคงที่
                   flexDirection: 'column',
                   justifyContent: 'space-between' ,  }}>
                   <CardContent>
@@ -249,16 +295,18 @@ const JoinEvent = () => {
                       />
                     )}
                     <Typography variant="subtitle1">{event.event_name}</Typography>
-                    <Typography variant="subtitle1">ผู้จัด: {event.user.name}</Typography>
+                    <Typography variant="subtitle1">ผู้จัด: {users[event.user]?.name || 'Loading...'}</Typography>
                     <Typography variant="subtitle2">สถานที่: {event.address}</Typography>
                     <Typography variant="subtitle2">วันที่จัด: {formatDate(event.startdate)} - {formatDate(event.enddate)}</Typography>
+
+                    <Typography variant="subtitle2">Register ID: {event.register_id}</Typography>
                   </CardContent>
                   <CardActions>
                     <Button size="small" color="primary" endIcon={<ArrowForwardIosIcon />} onClick={() => handleDetailsClick(event)}>เพิ่มเติม</Button>
                   </CardActions>
                   <CardActions sx={{ justifyContent: 'flex-end' }}>
                   {registrationsForEvent
-                    .filter(reg => String(reg.user) === String(userId)) // กรองเฉพาะการลงทะเบียนของผู้ใช้ที่ล็อกอินอยู่
+                    .filter(reg => String(reg.user) === String(userId) && reg.status === 'active') // กรองเฉพาะการลงทะเบียนของผู้ใช้ที่ล็อกอินอยู่
                     .map(reg => (
                   <Button key={reg.register_id} variant="contained" 
                   color={activeTab === 'สิ้นสุด' || activeTab === 'ยกเลิก' ? "inherit" : "error"}
