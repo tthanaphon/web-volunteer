@@ -1288,7 +1288,7 @@ return (
               ลบกิจกรรม ?
             </Typography>
             <Typography variant="body2" sx={{ marginBottom: 3 }}>
-              คุนแน่ใจใช่ไหมว่าต้องการลบกิจกรรม
+              คุณแน่ใจใช่ไหมว่าต้องการลบกิจกรรม
             </Typography>
             <Box display="flex" gap={2}>
               <Button 
