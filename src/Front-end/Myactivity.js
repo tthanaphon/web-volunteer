@@ -517,13 +517,13 @@ const Myactivity = () => {
       ([key, value]) => key === 'event_img' || (value && value !== '')
     );
     if (!eventImg) {
-      alert('กรุณาอัปโหลดรูปภาพก่อนสร้างกิจกรรม');
+      alert('กรุณาอัปโหลดรูปภาพ');
       return;
     }
   
     // Additional validation: ensure 'amount' is greater than zero
     if (formData.amount <= 0) {
-      alert('กรุณากรอกข้อมูลให้ถูกต้อง');
+      alert('กรุณากรอกจำนวนที่รับมากกว่า 0');
       return;
     }
   
@@ -900,153 +900,167 @@ const renderTable = (title, status) => {
   if (filteredRequests.length === 0) {
     return null;
   }
+
   let statusColor = '#999999'; // Default color
   if (status === 'อนุมัติ') statusColor = '#2EBDBD';
   else if (status === 'รออนุมัติ') statusColor = '#FFCC33';
   else if (status === 'ไม่อนุมัติ') statusColor = '#CC0000';
+
   return (
-<Box p={3}>
+    <Box p={3}>
       <Typography
         variant="h6"
         mt={3}
         sx={{
           backgroundColor: statusColor,
           color: 'white',
-          borderRadius: '16px', // ทำให้กรอบมีขอบโค้ง
-          padding: '8px 16px', // เพิ่มช่องว่างด้านในเพื่อให้ข้อความดูดีขึ้น
-          display: 'inline-block', // ทำให้ขนาดพอดีกับข้อความ
+          borderRadius: '16px',
+          padding: '8px 16px',
+          display: 'inline-block',
           width: '10%',
-          marginBottom: '16px', // เพิ่มระยะห่างด้านล่างจากตาราง
+          marginBottom: '16px',
           textAlign: 'center',
         }}
       >
         {title}
       </Typography>
       <TableContainer component={Paper}>
-  <Table>
-    <TableHead>
-      <TableRow>
-        <TableCell
-          align="center"
-          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
-        >
-          ชื่อกิจกรรม
-        </TableCell>
-        <TableCell
-          align="center"
-          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
-        >
-          ประเภท
-        </TableCell>
-        <TableCell
-          align="center"
-          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
-        >
-          วันจัดกิจกรรม
-        </TableCell>
-        <TableCell
-          align="center"
-          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
-        >
-          จำนวนคนลงทะเบียน
-        </TableCell>
-        <TableCell
-          align="center"
-          sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
-        >
-          *
-        </TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {filteredRequests.map((request) => {
-        const registrationCount = countRegistrationsForEvent(request.event.event_id);
-        return (
-          <TableRow key={request.request_id}>
-            <TableCell align="center" sx={{ width: '20%' }}>
-              {request.event.event_name}
-            </TableCell>
-            <TableCell align="center" sx={{ width: '20%' }}>
-              {request.event.type}
-            </TableCell>
-            <TableCell align="center" sx={{ width: '20%' }}>
-              {`${request.event.startdate} - ${request.event.enddate}`}
-            </TableCell>
-            <TableCell align="center" sx={{ width: '20%' }}>
-              {registrationCount}/{request.event.amount}
-              {status === 'อนุมัติ' && (
-                <span
-                  onClick={() => listRegister(request.event.event_id)}
-                  style={{ color: 'blue', textDecoration: 'none', cursor: 'pointer', marginLeft: '8px' }}
-                >
-                  รายชื่อ
-                </span>
-              )}
-            </TableCell>
-            <TableCell align="center" sx={{ width: '20%' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: 1,
-                }}
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                align="center"
+                sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
               >
-                <IconButton
-                  sx={{
-                    backgroundColor: '#E0E0E0',
-                    borderRadius: '8px',
-                    padding: '8px',
-                    '&:hover': {
-                      backgroundColor: '#D3D3D3',
-                    },
-                  }}
-                  onClick={() => handleOpenDetailDialog(request.event.event_id)}
+                ชื่อกิจกรรม
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+              >
+                ประเภท
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+              >
+                วันจัดกิจกรรม
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+              >
+                จำนวนคนลงทะเบียน
+              </TableCell>
+              {status === 'ไม่อนุมัติ' && (
+                <TableCell
+                  align="center"
+                  sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
                 >
-                  <DescriptionIcon sx={{ color: 'blue' }} />
-                </IconButton>
+                  เหตุผล
+                </TableCell>
+              )}
+              <TableCell
+                align="center"
+                sx={{ backgroundColor: 'gray', color: 'white', width: '20%' }}
+              >
+                *
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRequests.map((request) => {
+              const registrationCount = countRegistrationsForEvent(request.event.event_id);
+              return (
+                <TableRow key={request.request_id}>
+                  <TableCell align="center" sx={{ width: '20%' }}>
+                    {request.event.event_name}
+                  </TableCell>
+                  <TableCell align="center" sx={{ width: '20%' }}>
+                    {request.event.type}
+                  </TableCell>
+                  <TableCell align="center" sx={{ width: '20%' }}>
+                    {`${request.event.startdate} - ${request.event.enddate}`}
+                  </TableCell>
+                  <TableCell align="center" sx={{ width: '20%' }}>
+                    {registrationCount}/{request.event.amount}
+                    {status === 'อนุมัติ' && (
+                      <span
+                        onClick={() => listRegister(request.event.event_id)}
+                        style={{ color: 'blue', textDecoration: 'none', cursor: 'pointer', marginLeft: '8px' }}
+                      >
+                        รายชื่อ
+                      </span>
+                    )}
+                  </TableCell>
+                  {status === 'ไม่อนุมัติ' && (
+                    <TableCell align="center" sx={{ width: '20%' }}>
+                      {request.comment || 'ไม่มีเหตุผลระบุ'}
+                    </TableCell>
+                  )}
+                  <TableCell align="center" sx={{ width: '20%' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <IconButton
+                        sx={{
+                          backgroundColor: '#E0E0E0',
+                          borderRadius: '8px',
+                          padding: '8px',
+                          '&:hover': {
+                            backgroundColor: '#D3D3D3',
+                          },
+                        }}
+                        onClick={() => handleOpenDetailDialog(request.event.event_id)}
+                      >
+                        <DescriptionIcon sx={{ color: 'blue' }} />
+                      </IconButton>
 
-                {status !== 'ไม่อนุมัติ' && (
-                  <IconButton
-                    sx={{
-                      backgroundColor: '#E0E0E0',
-                      borderRadius: '8px',
-                      padding: '8px',
-                      '&:hover': {
-                        backgroundColor: '#D3D3D3',
-                      },
-                    }}
-                    onClick={() => handleOpenEditForm(request.event, request)}
-                  >
-                    <EditIcon sx={{ color: 'orange' }} />
-                  </IconButton>
-                )}
+                      {status !== 'ไม่อนุมัติ' && (
+                        <IconButton
+                          sx={{
+                            backgroundColor: '#E0E0E0',
+                            borderRadius: '8px',
+                            padding: '8px',
+                            '&:hover': {
+                              backgroundColor: '#D3D3D3',
+                            },
+                          }}
+                          onClick={() => handleOpenEditForm(request.event, request)}
+                        >
+                          <EditIcon sx={{ color: 'orange' }} />
+                        </IconButton>
+                      )}
 
-                <IconButton
-                  sx={{
-                    backgroundColor: '#E0E0E0',
-                    borderRadius: '8px',
-                    padding: '8px',
-                    '&:hover': {
-                      backgroundColor: '#D3D3D3',
-                    },
-                  }}
-                  onClick={() => handleOpenDeleteDialog(request.event.event_id)}
-                >
-                  <DeleteIcon sx={{ color: 'red' }} />
-                </IconButton>
-              </Box>
-            </TableCell>
-          </TableRow>
-        );
-      })}
-    </TableBody>
-  </Table>
-</TableContainer>
-
+                      <IconButton
+                        sx={{
+                          backgroundColor: '#E0E0E0',
+                          borderRadius: '8px',
+                          padding: '8px',
+                          '&:hover': {
+                            backgroundColor: '#D3D3D3',
+                          },
+                        }}
+                        onClick={() => handleOpenDeleteDialog(request.event.event_id)}
+                      >
+                        <DeleteIcon sx={{ color: 'red' }} />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
-    
   );
 };
+
 
 {/*profile */}
 return (
