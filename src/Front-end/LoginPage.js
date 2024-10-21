@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -11,23 +11,19 @@ const LoginPage = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Attempting login with:', { username, password }); // Debug log
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login/user', {
         username,
         password,
       });
   
-      console.log('Response data:', response.data); // Log the full response
-  
       if (response.status === 200) {
-        // Handle success
         const userId = response.data.user.user_id; 
-        onLogin(userId);
+        localStorage.setItem('userId', userId);
+        onLogin(userId); // เรียก onLogin จาก App.js
         navigate('/home');
       }
     } catch (error) {
-      console.error('Login error:', error.response ? error.response.data : error.message); // Enhanced error logging
       if (error.response && error.response.data) {
         setError(error.response.data.error);
       } else {
@@ -35,20 +31,28 @@ const LoginPage = ({ onLogin }) => {
       }
     }
   };
-  
-  
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin(e);
+    }
+  };
 
   const handleSignUpRedirect = () => {
-    navigate('/signup');  // Redirect to sign-up page
+    navigate('/signup');
   };
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      onLogin(storedUserId); // Call onLogin if user ID exists
+      navigate('/home'); // Redirect to home if user is already logged in
+    }
+  }, [onLogin, navigate]);
 
   return (
     <Box display="flex" height="100vh">
-      
-      {/* Left Section with Form */}
       <Box flex={1} display="flex" justifyContent="center" alignItems="center" bgcolor="#475443" p={4}>
-        <Paper elevation={3} sx={{ padding: 4, width: '400px',background:'#EA9715' ,borderRadius: '30px' }}>
+        <Paper elevation={3} sx={{ padding: 4, width: '400px', background: '#EA9715', borderRadius: '30px' }}>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
             Hello Volunteer!
           </Typography>
@@ -56,7 +60,7 @@ const LoginPage = ({ onLogin }) => {
           {error && <Typography color="error">{error}</Typography>}
 
           <TextField
-            label="Name"
+            label="username"
             variant="outlined"
             fullWidth
             margin="normal"
@@ -65,31 +69,30 @@ const LoginPage = ({ onLogin }) => {
             InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '20px', // ทำให้กรอบมน
-                background:'white'
+                borderRadius: '20px',
+                background: 'white',
               },
             }}
           />
           <TextField
-            label="Password"
+            label="password"
             variant="outlined"
             type="password"
             fullWidth
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyPress={handleKeyPress}
             InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '20px', // ทำให้กรอบมน
-                background:'white'
+                borderRadius: '20px',
+                background: 'white',
               },
             }}
-            
-          
           />
 
-          <Button variant="contained" color="primary" fullWidth onClick={handleLogin} sx={{ marginTop: 2, background:"#475443"}}>
+          <Button variant="contained" color="primary" fullWidth onClick={handleLogin} sx={{ marginTop: 2, background: "#475443" }}>
             Login
           </Button>
 
@@ -102,7 +105,6 @@ const LoginPage = ({ onLogin }) => {
         </Paper>
       </Box>
 
-      {/* Right Section with Image */}
       <Box
         flex={1}
         display="flex"
@@ -113,9 +115,7 @@ const LoginPage = ({ onLogin }) => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
-      >
-        {/* The image is already set as background */}
-      </Box>
+      />
     </Box>
   );
 };

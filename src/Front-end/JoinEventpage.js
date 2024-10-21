@@ -37,8 +37,16 @@ const JoinEvent = () => {
   const [registerIdToCancel, setRegisterIdToCancel] = useState(null);
 
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userID'); // Get the logged-in user's ID
-  console.log('User ID:', userId);
+  const userId = localStorage.getItem('userID'); // Get the logged-in user's 
+  useEffect(() => {
+    const userId = localStorage.getItem('userID');
+    if (!userId) {
+      navigate('/login');  // นำผู้ใช้ไปหน้า login ถ้าไม่พบ userID
+    } else {
+      window.history.replaceState(null, null, window.location.href); // เก็บสถานะ URL ปัจจุบัน
+    }
+  }, [navigate]);
+  
 
   // Fetch events and registrations
   useEffect(() => {
@@ -70,7 +78,15 @@ const JoinEvent = () => {
     return registrations.filter((registration) => registration.event === eventID).length;
   };
 
-  // Format date for display
+  const update = () => {
+    axios.get(`http://127.0.0.1:8000/api/registers/`) // Assuming a GET endpoint to fetch all appointments
+      .then((response) => {
+        setRegistrations(response.data); 
+        console.log('setRegistrations', response.data); // Move this inside the 'then' block
+      })
+      .catch((error) => console.error('Error fetching updated:', error));
+  }
+  
   const formatDate = (dateString) => {
     const date = dayjs(dateString);
     return date.format('D MMM YYYY');
@@ -103,6 +119,7 @@ const JoinEvent = () => {
       } catch (error) {
         console.error('Error cancelling registration:', error);
       } finally {
+        update();
         setOpenDialog(false); // Close dialog after confirming
         setRegisterIdToCancel(null); // Reset the register ID
       }
@@ -151,16 +168,17 @@ const JoinEvent = () => {
             registration.event === event.event_id && 
             registration.status === 'inactive'
           );
-          return isRegistered && dayjs(event.enddate).isBefore(today);
+          return isRegistered ;
         });
       }
       else {
-        // Filter only events that the current user has registered for and that are not canceled
+       // กรองอีเวนต์ที่ผู้ใช้คนปัจจุบันลงทะเบียนแล้วและยังไม่ถูกยกเลิก
         const userRegistrations = registrations.filter(registration =>
           String(registration.user) === String(userId) && registration.status === 'active'
         );
-  
+        // ดึง event ID ที่ผู้ใช้ลงทะเบียนจากรายการ userRegistrations
         const userEventIds = userRegistrations.map(reg => reg.event);
+        // กรองอีเวนต์ทั้งหมดเฉพาะที่มี event_id อยู่ใน userEventIds (อีเวนต์ที่ผู้ใช้ลงทะเบียนแล้ว)
         filtered = events.filter(event => userEventIds.includes(event.event_id));
       }
   
@@ -209,8 +227,9 @@ const JoinEvent = () => {
             {currentEvents.map((event, index) => {
               const registrationsForEvent = registrations.filter(reg => reg.event === event.event_id);
               return (
-                <Card key={index} sx={{ border: '2px solid green',  height: '100%',borderRadius: '16px' , display: 'flex', 
-                  flexDirection: 'column' }}>
+                <Card key={index} sx={{ border: '2px solid green',  height: '500px',borderRadius: '16px' , display: 'flex'  ,width: '400px', // กำหนดความกว้างคงที่
+                  flexDirection: 'column',
+                  justifyContent: 'space-between' ,  }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                       <Box sx={{bgcolor: '#ffdef2'}} variant="subtitle2">Post: {formatDate(event.date_create)}</Box>
@@ -223,6 +242,13 @@ const JoinEvent = () => {
                         <Typography>{countRegistrationsForEvent(event.event_id)}/{event.amount}</Typography>
                       </Box>
                     </Box>
+                  {event.event_img && (  // ตรวจสอบว่ามี URL ของรูปภาพ
+                      <img 
+                        src={event.event_img} 
+                        alt={event.event_name} 
+                        style={{ width: '100%', height: '200px', borderRadius: '16px',objectFit: 'cover', }} // ทำให้รูปภาพมีขนาดพอดีกับ Card
+                      />
+                    )}
                     <Typography variant="subtitle1">{event.event_name}</Typography>
                     <Typography variant="subtitle1">ผู้จัด: {event.user.name}</Typography>
                     <Typography variant="subtitle2">สถานที่: {event.address}</Typography>

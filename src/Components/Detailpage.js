@@ -69,6 +69,13 @@ const Detailpage = () => {
                          }}>
                     </Button>
                 </Box>
+                {event.event_img && (  // ตรวจสอบว่ามี URL ของรูปภาพ
+              <img 
+                src={event.event_img} 
+                alt={event.event_name} 
+               style={{ width: '100%', borderRadius: '16px' ,width:'500px' ,height:'30%'}} // ทำให้รูปภาพมีขนาดพอดีกับ Card
+             />
+                )}
                 <Typography variant="subtitle1" sx={{fontWeight:'bold' , fontSize:'20px'}}>{event.event_name}</Typography>
                 <Typography variant="subtitle1" >ผู้จัด: {event.user.name}</Typography>
                 <Typography variant="subtitle2">หมวดหมู่: {event.type}</Typography>

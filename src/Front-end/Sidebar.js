@@ -41,6 +41,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('isAuthenticated'); 
     localStorage.removeItem('userId');
     navigate('/login');
   };
@@ -105,7 +106,8 @@ const Sidebar = () => {
           alignItems: 'center',
           marginBottom: 1,
           borderRadius: '15px',
-          maxWidth: '500px', // กำหนดความกว้างสูงสุดให้แคบลง
+          width: '90%', // กำหนดความยาวเต็มที่
+          maxWidth: '600px', // กำหนดความกว้างสูงสุดให้แคบลง
           margin: '0 auto', // จัดตรงกลางในแนวนอน
         }}
       >
