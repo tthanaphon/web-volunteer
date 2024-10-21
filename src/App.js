@@ -68,7 +68,7 @@ function App() {
             />
             <Route 
             path="/activity-owner" 
-            element={<Myactivity />} 
+            element={isAuthenticated ? <Myactivity  userId={userId} /> : <Navigate to="/login" />}
             />
             <Route 
               path="/home" 
@@ -86,10 +86,6 @@ function App() {
               path="/activity-attend" 
               element={isAuthenticated ? <JoinEvent userId={userId} /> : <Navigate to="/login" />} 
             /> 
-             {/* <Route 
-            path="/listregister" 
-            element={<ListRegis />} 
-            /> */}
              <Route 
             path="/listregister" 
             element={isAuthenticated ? <ListRegis userId={userId}/> : <Navigate to="/login" />} 

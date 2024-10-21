@@ -27,7 +27,10 @@ const Myactivity = () => {
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-const [eventIdToDelete, setEventIdToDelete] = useState(null);
+  const [eventIdToDelete, setEventIdToDelete] = useState(null);
+  const [emailError, setEmailError] = useState("");
+  const [formError, setFormError] = useState("");
+
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -131,7 +134,7 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
     { value: 'ผู้พิการ', label: 'ผู้พิการ' },
     { value: 'การศึกษาและเยาวชน', label: 'การศึกษาและเยาวชน' },
     { value: 'สิ่งแวดล้อม', label: 'สิ่งแวดล้อม' },
-    { value: 'ศิลปะ/กราฟฟิก/ดีไซน', label: 'ศิลปะ/กราฟฟิก/ดีไซน์' },
+    { value: 'ศิลปะ/กราฟฟิก/ดีไซน์', label: 'ศิลปะ/กราฟฟิก/ดีไซน์' },
     { value: 'สื่อ/คอนเทนต์', label: 'สื่อ/คอนเทนต์' },
     { value: 'งานเขียน', label: 'งานเขียน' },
     { value: 'งานฝีมือ/ทำที่บ้าน', label: 'งานฝีมือ/ทำที่บ้าน' },
@@ -245,6 +248,11 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
     setEditEventData(null);
   };
   const handleUpdate = () => {
+    if (formData.amount <= 0) {
+      alert('กรุณากรอกจำนวนที่รับมากกว่า 0');
+      return;
+    }
+  
     if (!editEventData) return;
   
     const data = new FormData();
@@ -268,7 +276,7 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
       })
       .catch((error) => {
         console.error('Error updating event:', error);
-        alert('An error occurred while updating the event. Please try again.');
+        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       });
   };
   const handleOpenDeleteDialog = (id) => {
@@ -432,6 +440,23 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
 
   const handleProfileChange = (e) => {
     const { name, value, files } = e.target;
+    let errorMessage = "";
+  
+    // ตรวจสอบฟิลด์ที่ต้องไม่ว่าง ยกเว้น user_image
+    if (name !== "user_image" && !value) {
+      errorMessage = "กรุณากรอกข้อมูลให้ครบถ้วน";
+    }
+  
+    if (name === "email") {
+      // ตรวจสอบรูปแบบอีเมล
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(value)) {
+        errorMessage = "กรุณากรอกอีเมลให้ถูกต้อง";
+      }
+    }
+  
+    if (name === "tel" && value.length > 10) return;
+  
     if (name === 'user_image' && files && files.length > 0) {
       // ถ้ามีการเลือกไฟล์ใหม่ ให้ใช้ไฟล์นั้น
       setUserProfile({
@@ -444,9 +469,12 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
         [name]: value,
       });
     }
+    setFormError({
+      ...formError,
+      [name]: errorMessage,
+    });
   };
   
-
   const handleProfileSave = () => {
     const data = new FormData();
     data.append('name', userProfile.name);
@@ -488,6 +516,10 @@ const [eventIdToDelete, setEventIdToDelete] = useState(null);
     const isFormValid = Object.entries(formData).every(
       ([key, value]) => key === 'event_img' || (value && value !== '')
     );
+    if (!eventImg) {
+      alert('กรุณาอัปโหลดรูปภาพก่อนสร้างกิจกรรม');
+      return;
+    }
   
     // Additional validation: ensure 'amount' is greater than zero
     if (formData.amount <= 0) {
@@ -1102,7 +1134,7 @@ return (
       </Box>
             {/* Dialog สำหรับแก้ไขโปรไฟล์ */}
       <Dialog open={isProfileEditOpen} onClose={handleCloseProfileEdit} maxWidth="sm" fullWidth>
-        <DialogTitle>
+        <DialogTitle  >
           แก้ไขโปรไฟล์
           <IconButton
             aria-label="close"
@@ -1114,31 +1146,44 @@ return (
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+          <Grid item xs={12}>
               <TextField
                 label="ชื่อ"
                 name="name"
+                margin="normal" 
                 fullWidth
                 value={userProfile.name}
                 onChange={handleProfileChange}
+                error={!!formError.name}
+                helperText={formError.name}
+                InputLabelProps={{
+                  shrink: true,
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 label="อีเมล"
+                type="email"
                 name="email"
                 fullWidth
                 value={userProfile.email}
                 onChange={handleProfileChange}
+                error={!!formError.email}
+                helperText={formError.email}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 label="เบอร์โทร"
+                type="number"
                 name="tel"
                 fullWidth
                 value={userProfile.tel}
                 onChange={handleProfileChange}
+                error={!!formError.tel}
+                helperText={formError.tel}
+                inputProps={{ maxLength: 10 }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -1148,6 +1193,8 @@ return (
                 fullWidth
                 value={userProfile.username}
                 onChange={handleProfileChange}
+                error={!!formError.username}
+                helperText={formError.username}
               />
             </Grid>
             <Grid item xs={12}>
@@ -1157,6 +1204,8 @@ return (
                 fullWidth
                 value={userProfile.password}
                 onChange={handleProfileChange}
+                error={!!formError.password}
+                helperText={formError.password}
               />
             </Grid>
             {/* อัปโหลดไฟล์รูปภาพ */}
@@ -1172,7 +1221,7 @@ return (
               });
             }}
           />
-        </Grid>
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
