@@ -17,7 +17,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState(null);
   const location = useLocation();
-
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
@@ -44,7 +44,31 @@ function App() {
     setIsAuthenticated(false); // Update state
     setUserId(null); // Clear user ID from state
   };
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    console.log('Stored userId:', storedUserId);
+    console.log('isAuthenticated before:', isAuthenticated);
 
+    if (storedUserId) {
+      setUserId(storedUserId);
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+      Navigate('/login'); // เปลี่ยนเส้นทางไปหน้า login ถ้าไม่มี userId
+    }
+
+    setIsLoading(false); // ตั้งค่า isLoading เป็น false หลังจากตรวจสอบเสร็จสิ้น
+  }, [Navigate]);
+  useEffect(() => {
+    console.log('isAuthenticated updated to:', isAuthenticated);
+    if (isAuthenticated && !isLoading) {
+      console.log('Staying on current page due to authentication');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // แสดงข้อความ Loading ขณะที่กำลังตรวจสอบการล็อกอิน
+  }
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

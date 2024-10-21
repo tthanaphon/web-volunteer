@@ -1,6 +1,6 @@
-import React, { useState , useEffect} from 'react';
+import React, { useState} from 'react';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
 
 const LoginPage = ({ onLogin }) => {
@@ -9,6 +9,7 @@ const LoginPage = ({ onLogin }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -16,12 +17,12 @@ const LoginPage = ({ onLogin }) => {
         username,
         password,
       });
-  
+
       if (response.status === 200) {
         const userId = response.data.user.user_id; 
         localStorage.setItem('userId', userId);
-        onLogin(userId); // เรียก onLogin จาก App.js
-        navigate('/home');
+        onLogin(userId);
+        navigate('/home'); // เปลี่ยนไปหน้า home หลังจากล็อกอิน
       }
     } catch (error) {
       if (error.response && error.response.data) {
@@ -41,13 +42,9 @@ const LoginPage = ({ onLogin }) => {
   const handleSignUpRedirect = () => {
     navigate('/signup');
   };
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    if (storedUserId) {
-      onLogin(storedUserId); // Call onLogin if user ID exists
-      navigate('/home'); // Redirect to home if user is already logged in
-    }
-  }, [onLogin, navigate]);
+
+
+
 
   return (
     <Box display="flex" height="100vh">
