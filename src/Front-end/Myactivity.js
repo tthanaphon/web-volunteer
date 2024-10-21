@@ -517,13 +517,13 @@ const Myactivity = () => {
       ([key, value]) => key === 'event_img' || (value && value !== '')
     );
     if (!eventImg) {
-      alert('กรุณาอัปโหลดรูปภาพก่อนสร้างกิจกรรม');
+      alert('กรุณาอัปโหลดรูปภาพ');
       return;
     }
   
     // Additional validation: ensure 'amount' is greater than zero
     if (formData.amount <= 0) {
-      alert('กรุณากรอกข้อมูลให้ถูกต้อง');
+      alert('กรุณากรอกจำนวนที่รับมากกว่า 0');
       return;
     }
   
