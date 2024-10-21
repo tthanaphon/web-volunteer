@@ -19,7 +19,6 @@ function App() {
   const [userId, setUserId] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -128,6 +127,6 @@ function App() {
       </Box>
     </ThemeProvider>
   );
-}
+
 
 export default App;
