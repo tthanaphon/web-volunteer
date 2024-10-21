@@ -63,7 +63,6 @@ const JoinEvent = () => {
       try {
         const registrationResponse = await axios.get('http://127.0.0.1:8000/api/registers/');
         setRegistrations(registrationResponse.data);
-        console.log("data:",registrationResponse)
       } catch (error) {
         console.error('Error fetching registrations:', error);
       }

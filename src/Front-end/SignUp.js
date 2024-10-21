@@ -143,8 +143,8 @@ const SignUpPage = () => {
             name="tel"
             variant="outlined"
             type="tel"
-            maxRows={10}
             fullWidth
+            inputProps={{ maxLength: 10 }}
             InputLabelProps={{ style: { fontSize: '14px', color: '#333' } }}
             sx={{
               '& .MuiOutlinedInput-root': {
