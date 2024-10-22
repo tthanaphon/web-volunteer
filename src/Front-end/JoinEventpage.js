@@ -163,19 +163,18 @@ const JoinEvent = () => {
       let filtered;
   
       if (activeTab === 'ดำเนินการ') {
-        // Filter events that have started but not yet ended for the current user
+        // Filter active events (started but not ended) for the current user
         filtered = events
           .filter(event => {
             const userRegistration = registrations.find(registration => 
               String(registration.user) === String(userId) && 
               registration.event === event.event_id && 
-              registration.status === 'active'
+              registration.status === 'active' // Filter only active registrations
             );
-  
-            return userRegistration ;
+            return userRegistration;
           })
           .map(event => {
-            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId) && reg.status === 'active'); // Ensure only active registrations are mapped
             return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
           });
       } else if (activeTab === 'สิ้นสุด') {
@@ -185,39 +184,38 @@ const JoinEvent = () => {
             const userRegistration = registrations.find(registration => 
               String(registration.user) === String(userId) && 
               registration.event === event.event_id && 
-              registration.status === 'active'
+              registration.status === 'active' // Filter only active registrations
             );
-  
             return userRegistration && dayjs(event.enddate).isBefore(today);
           })
           .map(event => {
-            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId) && reg.status === 'active'); // Ensure only active registrations are mapped
             return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
           });
-      }  else if (activeTab === 'ยกเลิก') {
+      } else if (activeTab === 'ยกเลิก') {
         // Filter events that have been cancelled for the current user
         filtered = registrations
           .filter(registration => 
             String(registration.user) === String(userId) &&
-            registration.status === 'inactive'
+            registration.status === 'inactive' // Filter cancelled registrations
           )
           .map(cancelledRegistration => {
             const event = events.find(event => event.event_id === cancelledRegistration.event);
             return { ...event, register_id: cancelledRegistration.register_id };
           });
       } else {
-        // Filter events where the current user is actively registered
+        // For all other cases (activeTab !== 'ยกเลิก'), show only active registrations
         filtered = events
           .filter(event => {
             const userRegistration = registrations.find(registration => 
               String(registration.user) === String(userId) && 
               registration.event === event.event_id && 
-              registration.status === 'active'
+              registration.status === 'active' // Filter only active registrations
             );
             return userRegistration;
           })
           .map(event => {
-            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId));
+            const userRegistration = registrations.find(reg => reg.event === event.event_id && String(reg.user) === String(userId) && reg.status === 'active'); // Ensure only active registrations are mapped
             return { ...event, register_id: userRegistration ? userRegistration.register_id : null };
           });
       }
