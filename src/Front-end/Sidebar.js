@@ -18,7 +18,7 @@ const Sidebar = () => {
   ];
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userID');
+    const storedUserId = sessionStorage.getItem('userID');
     if (storedUserId) {
       setUserId(storedUserId);
       fetch(`http://127.0.0.1:8000/api/users/${storedUserId}/`)

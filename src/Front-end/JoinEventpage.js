@@ -39,9 +39,9 @@ const JoinEvent = () => {
   const [registerIdToCancel, setRegisterIdToCancel] = useState(null);
 
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userID'); // Get the logged-in user's 
+  const userId = sessionStorage.getItem('userID'); // Get the logged-in user's 
   useEffect(() => {
-    const userId = localStorage.getItem('userID');
+    const userId = sessionStorage.getItem('userID');
     if (!userId) {
       navigate('/login');  // นำผู้ใช้ไปหน้า login ถ้าไม่พบ userID
     } else {

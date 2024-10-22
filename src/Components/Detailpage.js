@@ -14,7 +14,7 @@ const Detailpage = () => {
     const { event,currentCount ,user } = location.state || {};
     const navigate = useNavigate();
     const [registrations ,setRegistrations] =  useState([])
-    const userId = localStorage.getItem('userID');
+    const userId = sessionStorage.getItem('userID');
     
 
     useEffect(() => {

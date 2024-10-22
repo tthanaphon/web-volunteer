@@ -20,7 +20,7 @@ const LoginPage = ({ onLogin }) => {
 
       if (response.status === 200) {
         const userId = response.data.user.user_id; 
-        localStorage.setItem('userId', userId);
+        sessionStorage.setItem('userId', userId);
         onLogin(userId);
         navigate('/home'); // เปลี่ยนไปหน้า home หลังจากล็อกอิน
       }
