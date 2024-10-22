@@ -21,8 +21,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    const storedUserId = localStorage.getItem('userID');
+    const authStatus = sessionStorage.getItem('isAuthenticated');
+    const storedUserId = sessionStorage.getItem('userID');
 
     if (authStatus === 'true' && storedUserId) {
       setIsAuthenticated(true);
@@ -41,14 +41,14 @@ function App() {
   const handleLogin = (userId) => {
     setIsAuthenticated(true);
     setUserId(userId);
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userID', userId);
+    sessionStorage.setItem('isAuthenticated', 'true');
+    sessionStorage.setItem('userID', userId);
     navigate('/home'); // Redirect to the home page after login
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userID');
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userID');
     setIsAuthenticated(false);
     setUserId(null);
     navigate('/login'); // Redirect to login page after logout
