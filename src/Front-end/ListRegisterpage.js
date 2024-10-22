@@ -31,8 +31,8 @@ const ListRegis = () => {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    console.log('Fetching registers...');
-    console.log('Current eventID:', eventID);
+    // console.log('Fetching registers...');
+    // console.log('Current eventID:', eventID);
 
     const fetchRegisters = async () => {
       try {
@@ -41,13 +41,13 @@ const ListRegis = () => {
           throw new Error('Failed to fetch data');
         }
         const data = await response.json();
-        console.log('Fetched data:', data);
+        // console.log('Fetched data:', data);
 
-        // Filter for active registrations with the correct eventID
+
         const filteredData = data.filter(
           (reg) => reg.event === Number(eventID) && reg.status === 'active'
         );
-        console.log('Filtered data (active):', filteredData);
+        // console.log('Filtered data (active):', filteredData);
 
         setRegisters(filteredData);
         setFilteredRegisters(filteredData);
@@ -62,7 +62,7 @@ const ListRegis = () => {
   }, [eventID]);
 
   useEffect(() => {
-    console.log('Registers updated:', registers);
+    // console.log('Registers updated:', registers);
   }, [registers]);
 
   const handleBack = () => {
@@ -116,7 +116,7 @@ const ListRegis = () => {
           <Typography color="error">{error}</Typography>
         ) : (
           <>
-            {console.log('Rendering table...')}
+            {/* {console.log('Rendering table...')} */}
             <TableContainer component={Paper}>
               <Table>
               <TableHead>

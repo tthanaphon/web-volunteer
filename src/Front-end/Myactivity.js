@@ -144,7 +144,7 @@ const Myactivity = () => {
   const handleOpenForm = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      user: userId || '', // Set the user ID here if it exists
+      user: userId || '', 
       event_name: '',
       type: '',
       address: '',
@@ -160,19 +160,19 @@ const Myactivity = () => {
     setOpen(true);
   };
 
-  const handleCloseForm = () => setOpen(false); // ปิดฟอร์ม
+  const handleCloseForm = () => setOpen(false); 
 
   const handleFileChange = (e) => setEventImg(e.target.files[0]);
 
   useEffect(() => {
-    const storedUserId = sessionStorage.getItem('userID'); // เปลี่ยนจาก localStorage เป็น sessionStorage
+    const storedUserId = sessionStorage.getItem('userID'); 
     if (storedUserId) {
       setUserId(storedUserId);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        user: storedUserId, // อัปเดตค่า user ใน formData
+        user: storedUserId, 
       }));
-      // Fetch ข้อมูลผู้ใช้จาก API โดยใช้ storedUserId
+
       fetch(`http://127.0.0.1:8000/api/users/${storedUserId}/`)
         .then((response) => response.json())
         .then((data) => {
@@ -184,17 +184,17 @@ const Myactivity = () => {
             passwords: data.passwords,
             username: data.username,
           });
-          console.log('User data fetched:', data);
+          // console.log('User data fetched:', data);
         })
-        .catch((error) => console.error('Error fetching user data:', error));
+        // .catch((error) => console.error('Error fetching user data:', error));
     } else {
-      console.log('No userId found in sessionStorage');
+      // console.log('No userId found in sessionStorage');
     }
   }, []);
   
  
   const listRegister = (eventID) => {
-    console.log('รายชื่อถูกคลิกแล้ว, eventID:', eventID);
+    // console.log('รายชื่อถูกคลิกแล้ว, eventID:', eventID);
     navigate(`/listregister?eventID=${eventID}`);
   };
 
@@ -202,7 +202,7 @@ const Myactivity = () => {
     setLoadingEvent(true);
     setError(null);
   
-    // Ensure you are using eventId instead of id
+
     fetch(`http://127.0.0.1:8000/api/events/${id}/`)
       .then((response) => {
         if (!response.ok) {
@@ -213,19 +213,19 @@ const Myactivity = () => {
       })
       .then((data) => {
         setSelectedEvent(data);
-        console.log('Selected Event:', data);
-        console.log('Image Filename:', data.event_img);
+        // console.log('Selected Event:', data);
+        // console.log('Image Filename:', data.event_img);
         setOpenDetailDialog(true);
       })
       .catch((error) => {
-        console.error('Error fetching event details:', error);
+        // console.error('Error fetching event details:', error);
         setError('Failed to load event details. Please try again later.');
       })
       .finally(() => {
         setLoadingEvent(false);
       });
   };
-  // Function to close the dialog
+
   const handleCloseDetailDialog = () => {
     setOpenDetailDialog(false);
     setSelectedEvent(null);
@@ -278,12 +278,12 @@ const Myactivity = () => {
         return response.json();
       })
       .then((data) => {
-        console.log('Event updated:', data);
+        // console.log('Event updated:', data);
         handleCloseEditForm();
         window.location.reload(); // Reload the page to see the updated list
       })
       .catch((error) => {
-        console.error('Error updating event:', error);
+        // console.error('Error updating event:', error);
         alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       });
   };
@@ -309,7 +309,7 @@ const Myactivity = () => {
             console.error('Failed to delete event');
           }
         })
-        .catch((error) => console.error('Error deleting event:', error))
+        // .catch((error) => console.error('Error deleting event:', error))
         .finally(() => {
           handleCloseDeleteDialog();
         });
@@ -331,7 +331,7 @@ const Myactivity = () => {
       const data = await response.json();
       setRegistrations(data);
     } catch (error) {
-      console.error('Error fetching registrations:', error);
+      // console.error('Error fetching registrations:', error);
     }
   };
   
@@ -341,7 +341,7 @@ const Myactivity = () => {
       const data = await response.json();
       setEvents(data);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      // console.error('Error fetching events:', error);
     }
   };
   
@@ -349,61 +349,18 @@ const Myactivity = () => {
     fetchEvents();
     fetchRegistrations();
   }, []);
-  // Count registrations for a specific event
   const countRegistrationsForEvent = (eventID) => {
     return registrations.filter((registration) => 
-      registration.event === eventID && registration.status === 'active'  // ตรวจสอบเฉพาะ status = 'active'
-    ).length; // นับจำนวนคนลงทะเบียนที่มี status = 'active'
+      registration.event === eventID && registration.status === 'active'  
+    ).length; 
   };
   
-  // Map each event to its registration count
+
   const eventsWithRegistrationCount = events.map((event) => ({
     ...event,
     registrationCount: countRegistrationsForEvent(event.id),
-  }));
+  })); 
   
-  // const handleSubmit = () => {
-  //   console.log('User ID in formData:', formData.user);
-  //   const isFormValid = Object.values(formData).every((field) => field !== '');
-  //   if (!isFormValid) {
-  //     alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
-  //     return;
-  //   }
-  //   const data = new FormData();
-  //   Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-  //   if (eventImg) data.append('event_img', eventImg);
-  //   let eventId
-  //   fetch('http://127.0.0.1:8000/api/events/', { method: 'POST', body: data })
-  //     .then((response) => response.json().then((data) => ({ status: response.status, data })))
-  //     .then(({ status, data }) => {
-  //       if (status === 400) console.error('Bad Request:', data);
-  //       else console.log('Event created:', data);
-  //       eventId = data.event_id;
-  //       console.log('Event ID:', eventId);
-  //       handleCloseForm();
-  //     })
-  //     .catch((error) => console.error('Error creating event:', error));
-
-  //     //สร้าง request โยน event.id เข้าไป
-  //     const data_req = new FormData();
-  //     data_req.append('event', eventId);
-  //     data_req.append('comment', "");
-  //     data_req.append('status', "รออนุมัติ");
-
-  //     console.log("data_req",data_req)
-  //     // Send request to the API
-  //     fetch('http://127.0.0.1:8000/api/requests/', {
-  //       method: 'POST',
-  //       body: data_req,
-  //     })
-  //       .then((response) => response.json())
-  //       .then((data) => {
-  //         console.log('Request created:', data);
-  //       })
-  //       .catch((error) => {
-  //         console.error('Error creating request:', error);
-  //       });
-  // };
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
   const [userProfile, setUserProfile] = useState({
     name: '',
@@ -419,25 +376,25 @@ const Myactivity = () => {
 
   useEffect(() => {
     if (userId) {
-      console.log('Fetching user data for userId:', userId); // ตรวจสอบว่าค่า userId ถูกต้อง
+      // console.log('Fetching user data for userId:', userId); // 
       fetch(`http://127.0.0.1:8000/api/users/${userId}/`)
         .then((response) => {
-          console.log('Response status:', response.status); // ตรวจสอบสถานะของการตอบกลับ
+          // console.log('Response status:', response.status); 
           return response.json();
         })
         .then((data) => {
-          console.log('Fetched user data:', data); // ตรวจสอบข้อมูลที่ได้รับ
+          // console.log('Fetched user data:', data); 
           setUserProfile({
             name: data.name,
             email: data.email,
             tel: data.tel,
             user_image: data.user_img,
             username: data.username,
-            password: '', // Set as empty initially for user to input new password if desired
+            password: '', // 
             old_password: data.password,
           });
         })
-        .catch((error) => console.error('Error fetching user data:', error));
+        // .catch((error) => console.error('Error fetching user data:', error));
     }
   }, [userId]);
   
@@ -501,20 +458,18 @@ const Myactivity = () => {
     data.append('username', userProfile.username);
     
     if (userProfile.password && userProfile.password.trim() !== '') {
-      // Use the new password if the user has provided one
       data.append('password', userProfile.password);
     } else {
-      // If no new password is provided, use the old password to ensure it remains unchanged
       data.append('password', userProfile.old_password);
     }
   
     for (let [key, value] of data.entries()) {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
     }
     
-    // ตรวจสอบว่ามีการเลือกไฟล์รูปภาพใหม่หรือไม่
+    // ตรวจสอบว่ามีการเลือกไฟล์รูปภาพใหม่
     if (userProfile.user_image && userProfile.user_image instanceof File) {
-      data.append('user_img', userProfile.user_image); // ถ้ามีไฟล์ใหม่ ให้ใช้ไฟล์นั้น
+      data.append('user_img', userProfile.user_image); 
     }
   
     fetch(`http://127.0.0.1:8000/api/users/${userId}/`, {
@@ -528,25 +483,22 @@ const Myactivity = () => {
         return response.json();
       })
       .then((data) => {
-        console.log('Profile updated successfully:', data);
+        // console.log('Profile updated successfully:', data);
         setUserProfile((prevState) => ({
           ...prevState,
-          password: '', // Clear password after submission
-          old_password: data.password, // Update old_password to reflect the latest password in the backend
-          user_image: data.user_img, // Update user image if changed
+          password: '', 
+          old_password: data.password, 
+          user_image: data.user_img, 
         }));
         handleCloseProfileEdit();
-  
-        // Reload the page after successful update
         window.location.reload();
       })
       .catch((error) => {
-        console.error('Error updating profile:', error);
+        // console.error('Error updating profile:', error);
       });
   };
   
   const handleSubmit = () => {
-    // Validate that no fields are empty (except 'event_img' since it's optional)
     const isFormValid = Object.entries(formData).every(
       ([key, value]) => key === 'event_img' || (value && value !== '')
     );
@@ -555,7 +507,6 @@ const Myactivity = () => {
       return;
     }
   
-    // Additional validation: ensure 'amount' is greater than zero
     if (formData.amount <= 0) {
       alert('กรุณากรอกจำนวนที่รับมากกว่า 0');
       return;
@@ -566,12 +517,12 @@ const Myactivity = () => {
       return;
     }
   
-    // Create form data for event submission
+
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     if (eventImg) data.append('event_img', eventImg);
   
-    // POST request to create a new event
+
     fetch('http://127.0.0.1:8000/api/events/', {
       method: 'POST',
       body: data,
@@ -583,17 +534,17 @@ const Myactivity = () => {
         return response.json();
       })
       .then((data) => {
-        console.log('Event created:', data);
+        // console.log('Event created:', data);
         const eventId = data.event_id;
   
-        // Prepare request data
+
         const data_req = {
           comment: "",
           status: "รออนุมัติ",
           event: eventId,
         };
   
-        // POST request to create a new request
+
         return fetch('http://127.0.0.1:8000/api/requests/', {
           method: 'POST',
           headers: {
@@ -609,12 +560,12 @@ const Myactivity = () => {
         return response.json();
       })
       .then((data) => {
-        console.log('Request created:', data);
+        // console.log('Request created:', data);
         handleCloseForm();
         window.location.reload()
       })
       .catch((error) => {
-        console.error('Error during form submission:', error);
+        // console.error('Error during form submission:', error);
         alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       });
   };
@@ -635,37 +586,33 @@ const Myactivity = () => {
             const requestsResult = await requestsResponse.json();
             const eventsResult = await eventsResponse.json();
 
-            console.log('Fetched request data:', requestsResult);
-            console.log('Fetched event data:', eventsResult);
+            // console.log('Fetched request data:', requestsResult);
+            // console.log('Fetched event data:', eventsResult);
 
             setEvents(eventsResult);
 
             if (userId) {
-                // Map event_id to event details
                 const eventMap = eventsResult.reduce((acc, event) => {
-                    acc[event.event_id] = event; // Store the full event object
+                    acc[event.event_id] = event; 
                     return acc;
                 }, {});
+                // console.log('Event Map:', eventMap);
 
-                // Log eventMap to check its structure
-                console.log('Event Map:', eventMap);
 
-                // Filter requests based on userId associated with event and include event details
                 const matchingRequests = requestsResult
                     .filter(request => eventMap[request.event] && eventMap[request.event].user === parseInt(userId, 10))
                     .map(request => ({
                         ...request,
-                        event: eventMap[request.event] // Add full event details to each request
+                        event: eventMap[request.event] 
                     }));
 
-                // Log matchingRequests to see what is being matched
-                console.log(`Matching requests for userId ${userId}:`, matchingRequests);
+                // console.log(`Matching requests for userId ${userId}:`, matchingRequests);
                 setRequests(matchingRequests);
             } else {
-                console.log('UserId is not available for filtering requests.');
+                // console.log('UserId is not available for filtering requests.');
             }
         } catch (error) {
-            console.error('Fetch error:', error);
+            // console.error('Fetch error:', error);
             setError(error.message);
         } finally {
             setLoading(false);
