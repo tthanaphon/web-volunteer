@@ -31,20 +31,20 @@ const Sidebar = () => {
             email: data.email,
             user_img: data.user_img,
           });
-          console.log(data)
+          // console.log(data)
         })
-        .catch((error) => console.error('Error fetching user data:', error));
+        // .catch((error) => console.error('Error fetching user data:', error));
     } else {
-      console.log('No userId found in localStorage');
+      // console.log('No userId found in localStorage');
     }
   }, []);
 
   const handleLogout = () => {
-    console.log('Logging out...');
+    // console.log('Logging out...');
     sessionStorage.removeItem('authToken');
     sessionStorage.removeItem('isAuthenticated');
     sessionStorage.removeItem('userId');
-    console.log('Navigating to login...');
+    // console.log('Navigating to login...');
     navigate('/login');
   };
   

@@ -53,7 +53,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
- console.log('reqest:',requests)
+//  console.log('reqest:',requests)
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -89,7 +89,7 @@ const HomePage = () => {
         
         setRequests(requestMap); // setRequests เพื่อเก็บข้อมูล
       } catch (error) {
-        console.error('Error fetching events or users:', error);
+        // console.error('Error fetching events or users:', error);
       }
     };
 
@@ -98,7 +98,7 @@ const HomePage = () => {
         const registrationResponse = await axios.get('http://127.0.0.1:8000/api/registers/');
         setRegistrations(registrationResponse.data);
       } catch (error) {
-        console.error('Error fetching registrations:', error);
+        // console.error('Error fetching registrations:', error);
       }
     };
     fetchEvents();
@@ -149,7 +149,7 @@ const HomePage = () => {
     
     return matchesActivity && matchesProvince && matchesTypeDate &&matchesSearchTerm && hasApprovedRequests ;
   });
-  console.log('Filtered Events List:', filteredEventsList);
+  // console.log('Filtered Events List:', filteredEventsList);
 
   const handleDetailsClick = (event) => {
     const currentCount = countRegistrationsForEvent(event.event_id); // คำนวณจำนวนการลงทะเบียน
@@ -157,7 +157,7 @@ const HomePage = () => {
   };
   
   const handleRegister = (eventID,event_name) => {
-    console.log('id:',eventID)
+    // console.log('id:',eventID)
     navigate('/event-register',{state:{eventID,event_name}});
   }
 
