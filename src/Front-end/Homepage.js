@@ -6,7 +6,7 @@ import dayjs from 'dayjs'; // import dayjs
 import 'dayjs/locale/th';  // import locale ภาษาไทย
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -51,6 +51,7 @@ const HomePage = () => {
 
   const userId= sessionStorage.getItem('userID');
   const navigate = useNavigate();
+  const location = useLocation();
 
  console.log('reqest:',requests)
 
@@ -59,7 +60,7 @@ const HomePage = () => {
       try {
         const eventResponse = await axios.get('http://127.0.0.1:8000/api/events/');
         const eventList = eventResponse.data;
-        console.log('Events:', eventList);
+        // console.log('Events:', eventList);
         setEvents(eventList);
 
         // เรียก API สำหรับผู้ใช้แต่ละคน
@@ -74,7 +75,7 @@ const HomePage = () => {
         userResponses.forEach((response, index) => {
           userMap[eventList[index].user] = response.data;
         });
-        console.log('Users:', userMap);
+        // console.log('Users:', userMap);
         setUsers(userMap);
         const requestResponse = await axios.get('http://127.0.0.1:8000/api/requests/');
         const allRequests = requestResponse.data;
@@ -152,7 +153,7 @@ const HomePage = () => {
 
   const handleDetailsClick = (event) => {
     const currentCount = countRegistrationsForEvent(event.event_id); // คำนวณจำนวนการลงทะเบียน
-    navigate('/event-detail', { state: { event, currentCount, user: users[event.user] } });
+    navigate('/event-detail', { state: { event, currentCount, user: users[event.user] ,from: location.pathname} });
   };
   
   const handleRegister = (eventID,event_name) => {

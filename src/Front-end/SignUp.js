@@ -49,7 +49,7 @@ const SignUpPage = () => {
       alert('Registration successful');
       navigate('/login'); // Redirect to the login page after successful sign-up
     } catch (error) {
-      console.error('Error during sign-up:', error.response?.data || error);
+      // console.error('Error during sign-up:', error.response?.data || error);
       alert('Error during sign-up: ' + (error.response?.data?.error || 'Unknown error'));
     }
   };

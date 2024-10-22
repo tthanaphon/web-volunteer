@@ -34,7 +34,6 @@ const Detailpage = () => {
         return <Typography variant="h6">ไม่มีข้อมูลกิจกรรม</Typography>; // ถ้าไม่มีข้อมูลให้แสดงข้อความ
     }
     const handleRegister = (eventID,event_name) => {
-        console.log('id:',eventID)
         navigate('/event-register',{
             state:{eventID,event_name}});
       }
@@ -43,11 +42,11 @@ const Detailpage = () => {
         return date.format('D MMM YYYY'); // รูปแบบ: วัน เดือน ปี
     };
     const handleBackClick = () => {
-        navigate('/home');
+      navigate(location.state?.from || '/home');
     };
     const isJoin = (eventID) => {
         return registrations.some(
-          (registration) => registration.event === eventID &&  String(registration.user) === String(userId)
+          (registration) => registration.event === eventID &&  String(registration.user) === String(userId) && registration.status ==='active'
         );
       }
    
