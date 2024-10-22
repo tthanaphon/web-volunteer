@@ -43,8 +43,11 @@ const ListRegis = () => {
         const data = await response.json();
         console.log('Fetched data:', data);
 
-        const filteredData = data.filter((reg) => reg.event === Number(eventID));
-        console.log('Filtered data:', filteredData);
+        // Filter for active registrations with the correct eventID
+        const filteredData = data.filter(
+          (reg) => reg.event === Number(eventID) && reg.status === 'active'
+        );
+        console.log('Filtered data (active):', filteredData);
 
         setRegisters(filteredData);
         setFilteredRegisters(filteredData);

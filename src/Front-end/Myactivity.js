@@ -349,9 +349,11 @@ const Myactivity = () => {
     fetchEvents();
     fetchRegistrations();
   }, []);
-  
+  // Count registrations for a specific event
   const countRegistrationsForEvent = (eventID) => {
-    return registrations.filter((registration) => registration.event === eventID).length; // Count registrations per event
+    return registrations.filter((registration) => 
+      registration.event === eventID && registration.status === 'active'  // ตรวจสอบเฉพาะ status = 'active'
+    ).length; // นับจำนวนคนลงทะเบียนที่มี status = 'active'
   };
   
   // Map each event to its registration count
@@ -410,6 +412,7 @@ const Myactivity = () => {
     user_image: '',
     password: '',
     username: '',
+    old_password: '', 
   });
   const defaultImage = 'http://127.0.0.1:8000/media/default_user.png';
   const userImageUrl = userProfile.user_image || defaultImage;
@@ -429,8 +432,9 @@ const Myactivity = () => {
             email: data.email,
             tel: data.tel,
             user_image: data.user_img,
-            password: data.password,
             username: data.username,
+            password: '', // Set as empty initially for user to input new password if desired
+            old_password: data.password,
           });
         })
         .catch((error) => console.error('Error fetching user data:', error));
@@ -443,8 +447,14 @@ const Myactivity = () => {
   };
 
   const handleCloseProfileEdit = () => {
+    // Reset password field to empty when closing the edit modal
+    setUserProfile((prevState) => ({
+      ...prevState,
+      password: '',
+    }));
     setIsProfileEditOpen(false);
   };
+  
 
   const handleProfileChange = (e) => {
     const { name, value, files } = e.target;
@@ -489,8 +499,19 @@ const Myactivity = () => {
     data.append('email', userProfile.email);
     data.append('tel', userProfile.tel);
     data.append('username', userProfile.username);
-    data.append('password', userProfile.password);
+    
+    if (userProfile.password && userProfile.password.trim() !== '') {
+      // Use the new password if the user has provided one
+      data.append('password', userProfile.password);
+    } else {
+      // If no new password is provided, use the old password to ensure it remains unchanged
+      data.append('password', userProfile.old_password);
+    }
   
+    for (let [key, value] of data.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
     // ตรวจสอบว่ามีการเลือกไฟล์รูปภาพใหม่หรือไม่
     if (userProfile.user_image && userProfile.user_image instanceof File) {
       data.append('user_img', userProfile.user_image); // ถ้ามีไฟล์ใหม่ ให้ใช้ไฟล์นั้น
@@ -508,7 +529,12 @@ const Myactivity = () => {
       })
       .then((data) => {
         console.log('Profile updated successfully:', data);
-        setUserProfile(data);
+        setUserProfile((prevState) => ({
+          ...prevState,
+          password: '', // Clear password after submission
+          old_password: data.password, // Update old_password to reflect the latest password in the backend
+          user_image: data.user_img, // Update user image if changed
+        }));
         handleCloseProfileEdit();
   
         // Reload the page after successful update
@@ -1188,6 +1214,7 @@ return (
               <TextField
                 label="password"
                 name="password"
+                placeholder='ระบุ password ใหม่ที่ต้องการแก้ไข'
                 fullWidth
                 value={userProfile.password}
                 onChange={handleProfileChange}
