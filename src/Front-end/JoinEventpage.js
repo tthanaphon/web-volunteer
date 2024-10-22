@@ -20,7 +20,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 
 dayjs.locale('th');
 
@@ -39,6 +39,7 @@ const JoinEvent = () => {
   const [registerIdToCancel, setRegisterIdToCancel] = useState(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const userId = sessionStorage.getItem('userID'); // Get the logged-in user's 
   useEffect(() => {
     const userId = sessionStorage.getItem('userID');
@@ -63,8 +64,8 @@ const JoinEvent = () => {
       const eventList = eventResponse.data;
       setEvents(eventList);
       
-      console.log('Events:', eventList);
-      console.log('Registrations:', registrationResponse.data);
+      // console.log('Events:', eventList);
+      // console.log('Registrations:', registrationResponse.data);
       
       setRegistrations(registrationResponse.data);
 
@@ -80,7 +81,7 @@ const JoinEvent = () => {
         userMap[eventList[index].user] = response.data;
       });
       
-      console.log('Users:', userMap);
+      // console.log('Users:', userMap);
       setUsers(userMap);
       
     } catch (error) {
@@ -106,7 +107,7 @@ const JoinEvent = () => {
     axios.get(`http://127.0.0.1:8000/api/registers/`) // Assuming a GET endpoint to fetch all appointments
       .then((response) => {
         setRegistrations(response.data); 
-        console.log('setRegistrations', response.data); // Move this inside the 'then' block
+        // console.log('setRegistrations', response.data); // Move this inside the 'then' block
       })
       .catch((error) => console.error('Error fetching updated:', error));
   }
@@ -235,7 +236,7 @@ const JoinEvent = () => {
   const handleDetailsClick = (event) => {
     if (event && users[event.user]) {
       const currentCount = countRegistrationsForEvent(event.event_id); // คำนวณจำนวนการลงทะเบียน
-      navigate('/event-detail', { state: { event, currentCount, user: users[event.user] } });
+      navigate('/event-detail', { state: { event, currentCount, user: users[event.user] ,from: location.pathname} });
     } else {
       console.error('Event or user data is missing');
     }

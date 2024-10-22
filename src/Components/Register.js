@@ -59,7 +59,7 @@ const RegistrationForm = ({ userId }) => {
 
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/registers/', dataToSubmit);
-      console.log('Form submitted successfully:', response.data);
+      // console.log('Form submitted successfully:', response.data);
       setFormData({
         register_firstname: '',
         register_lastname: '',
