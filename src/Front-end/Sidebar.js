@@ -40,11 +40,16 @@ const Sidebar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('isAuthenticated'); 
-    localStorage.removeItem('userId');
+    console.log('Logging out...');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userId');
+    console.log('Navigating to login...');
     navigate('/login');
   };
+  
+  
+  
 
   return (
     <Drawer

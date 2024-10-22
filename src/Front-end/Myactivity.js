@@ -165,7 +165,7 @@ const Myactivity = () => {
   const handleFileChange = (e) => setEventImg(e.target.files[0]);
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userID');
+    const storedUserId = sessionStorage.getItem('userID'); // เปลี่ยนจาก localStorage เป็น sessionStorage
     if (storedUserId) {
       setUserId(storedUserId);
       setFormData((prevFormData) => ({
@@ -176,14 +176,22 @@ const Myactivity = () => {
       fetch(`http://127.0.0.1:8000/api/users/${storedUserId}/`)
         .then((response) => response.json())
         .then((data) => {
-          setUserData({ name: data.name, tel: data.tel, email: data.email,img:data.user_img,passwords:data.passwords,username:data.username });
+          setUserData({
+            name: data.name,
+            tel: data.tel,
+            email: data.email,
+            img: data.user_img,
+            passwords: data.passwords,
+            username: data.username,
+          });
           console.log('User data fetched:', data);
         })
         .catch((error) => console.error('Error fetching user data:', error));
     } else {
-      console.log('No userId found in localStorage');
+      console.log('No userId found in sessionStorage');
     }
   }, []);
+  
  
   const listRegister = (eventID) => {
     console.log('รายชื่อถูกคลิกแล้ว, eventID:', eventID);
